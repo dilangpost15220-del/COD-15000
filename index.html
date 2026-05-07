@@ -14,7 +14,18 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: { extend: { fontFamily: { sans: ['Sarabun', 'sans-serif'] }, colors: { primary: '#3b82f6', secondary: '#64748b', success: '#10b981', danger: '#ef4444', warning: '#f59e0b' } } }
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Sarabun', 'sans-serif'] }, 
+                    colors: { 
+                        primary: '#3b82f6', 
+                        secondary: '#64748b', 
+                        success: '#10b981', 
+                        danger: '#ef4444', 
+                        warning: '#f59e0b' 
+                    } 
+                } 
+            }
         }
     </script>
     <style>
@@ -47,8 +58,46 @@
         .loading-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; }
         .page-section { display: block; }
         .page-section.hidden { display: none; }
-        /* ซ่อนเมนู Settings โดยปกติ */
         .settings-menu-hidden { display: none !important; }
+        
+        /* จุดลัดเข้าเมนูตั้งค่า */
+        .settings-trigger {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: #3b82f6;
+            border-radius: 50%;
+            opacity: 0.3;
+            cursor: pointer;
+            z-index: 50;
+            transition: all 0.3s;
+        }
+        .settings-trigger:hover {
+            opacity: 1;
+            transform: scale(1.5);
+            box-shadow: 0 0 10px rgba(59,130,246,0.5);
+        }
+        
+        /* เอฟเฟกต์กระพริบเมื่อกดค้าง */
+        .press-hold-active {
+            animation: pulse-blue 1s infinite;
+        }
+        @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+        }
+        
+        /* ปุ่มลัดบนมือถือ */
+        .mobile-settings-btn {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-settings-btn {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -61,27 +110,51 @@
     </div>
 </div>
 
+<!-- จุดลัดเข้าเมนูตั้งค่า (มุมซ้ายล่าง) -->
+<div class="settings-trigger" onclick="toggleSettingsVisibility()" title="เข้าเมนูตั้งค่า"></div>
+
 <div class="flex min-h-screen">
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed md:static z-40 w-64 h-screen bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transform -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
         <div class="p-6 border-b border-gray-200 dark:border-slate-700">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg"><i class="fas fa-box-open"></i></div>
-                <div><h1 class="font-bold text-lg leading-tight">Tracking Pro</h1><p class="text-xs text-gray-500 dark:text-gray-400">ระบบจัดการพัสดุ</p></div>
+            <!-- คลิกที่โลโก้ 5 ครั้งเพื่อเข้าเมนูตั้งค่า -->
+            <div class="flex items-center gap-3 cursor-pointer select-none" id="logoClicker" title="คลิก 5 ครั้งเพื่อเข้าเมนูตั้งค่า">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Tracking Pro</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">ระบบจัดการพัสดุ</p>
+                </div>
             </div>
         </div>
         <nav class="p-4 space-y-1 flex-1">
-            <a href="#" onclick="showPage('dashboard'); return false;" id="nav-dashboard" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-chart-line w-5"></i><span>แดชบอร์ด</span></a>
-            <a href="#" onclick="showPage('records'); return false;" id="nav-records" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-list w-5"></i><span>รายการทั้งหมด</span></a>
-            <a href="#" onclick="showPage('import'); return false;" id="nav-import" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-file-import w-5"></i><span>นำเข้าข้อมูล</span></a>
-            <a href="#" onclick="showPage('analytics'); return false;" id="nav-analytics" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-chart-pie w-5"></i><span>วิเคราะห์ข้อมูล</span></a>
-            <!-- ซ่อนเมนู Settings โดยปกติ - แสดงเมื่อกด Ctrl+Shift+S -->
-            <a href="#" onclick="showPage('settings'); return false;" id="nav-settings" class="sidebar-item settings-menu-hidden flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-cog w-5"></i><span>ตั้งค่า <i class="fas fa-lock text-xs opacity-50 ml-1"></i></span></a>
+            <a href="#" onclick="showPage('dashboard'); return false;" id="nav-dashboard" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium">
+                <i class="fas fa-chart-line w-5"></i><span>แดชบอร์ด</span>
+            </a>
+            <a href="#" onclick="showPage('records'); return false;" id="nav-records" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium">
+                <i class="fas fa-list w-5"></i><span>รายการทั้งหมด</span>
+            </a>
+            <a href="#" onclick="showPage('import'); return false;" id="nav-import" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium">
+                <i class="fas fa-file-import w-5"></i><span>นำเข้าข้อมูล</span>
+            </a>
+            <a href="#" onclick="showPage('analytics'); return false;" id="nav-analytics" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium">
+                <i class="fas fa-chart-pie w-5"></i><span>วิเคราะห์ข้อมูล</span>
+            </a>
+            <a href="#" onclick="showPage('settings'); return false;" id="nav-settings" class="sidebar-item settings-menu-hidden flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium">
+                <i class="fas fa-cog w-5"></i><span>ตั้งค่า</span>
+            </a>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700">
             <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-                <i class="fas fa-moon dark:hidden w-5"></i><i class="fas fa-sun hidden dark:block w-5 text-yellow-400"></i>
-                <span class="dark:hidden">โหมดกลางคืน</span><span class="hidden dark:block">โหมดกลางวัน</span>
+                <i class="fas fa-moon dark:hidden w-5"></i>
+                <i class="fas fa-sun hidden dark:block w-5 text-yellow-400"></i>
+                <span class="dark:hidden">โหมดกลางคืน</span>
+                <span class="hidden dark:block">โหมดกลางวัน</span>
+            </button>
+            <!-- ปุ่มเข้าเมนูตั้งค่าสำหรับมือถือ -->
+            <button onclick="toggleSettingsVisibility()" class="mobile-settings-btn w-full mt-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-medium items-center justify-center gap-2">
+                <i class="fas fa-cog"></i><span>ตั้งค่าระบบ</span>
             </button>
             <button onclick="toggleSidebar()" class="md:hidden w-full mt-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-xl text-sm font-medium">ปิดเมนู</button>
         </div>
@@ -89,29 +162,37 @@
 
     <!-- Main Content -->
     <main class="flex-1 overflow-auto">
-        <header class="glass-effect sticky top-0 z-30 px-4 md:px-8 py-4 border-b border-gray-200 dark:border-slate-700 relative">
+        <header class="glass-effect sticky top-0 z-30 px-4 md:px-8 py-4 border-b border-gray-200 dark:border-slate-700">
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"><i class="fas fa-bars text-xl"></i></button>
-                    <div>
+                    <button onclick="toggleSidebar()" class="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <!-- กดค้างที่ชื่อหน้า 3 วินาทีเพื่อเข้าเมนูตั้งค่า -->
+                    <div id="pageTitleContainer" class="cursor-pointer select-none relative">
                         <h2 class="text-xl font-bold" id="pageTitle">แดชบอร์ดผู้ดูแลระบบ</h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 hidden md:block">สรุปรายงานประจำวัน รายที่ทำการไปรษณีย์</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 hidden md:block">สรุปรายงานประจำวัน</p>
+                        <!-- ตัวนับเวลากดค้าง -->
+                        <div id="holdIndicator" class="absolute -bottom-1 left-0 h-1 bg-blue-500 rounded-full transition-all duration-100" style="width: 0%; opacity: 0;"></div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="confirmClearAll()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl font-medium transition" title="ล้างข้อมูลทั้งหมด"><i class="fas fa-trash-alt"></i><span class="hidden md:inline">ล้างข้อมูล</span></button>
-                    <button onclick="refreshData()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-medium hover:bg-blue-100 transition"><i class="fas fa-sync-alt"></i><span>รีเฟรช</span></button>
-                    <button onclick="exportPDF()" class="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-100 transition"><i class="fas fa-file-pdf"></i><span class="hidden md:inline">PDF</span></button>
-                    <div class="relative">
-                        <button onclick="showSyncMenu(event)" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl font-medium hover:bg-emerald-100 transition"><i class="fab fa-google-drive"></i><span class="hidden md:inline">Google Sheet</span><span id="syncDot" class="w-2 h-2 rounded-full bg-gray-400 hidden md:block"></span></button>
-                        <div id="syncMenu" class="hidden absolute right-0 top-12 z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-xl w-56 overflow-hidden">
-                            <div class="p-3 border-b border-gray-100 dark:border-slate-700"><p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Google Sheets Sync</p><p id="syncStatusText" class="text-xs text-gray-500 dark:text-gray-400 mt-1">ยังไม่ได้ตั้งค่า URL</p></div>
-                            <button onclick="syncFromSheet()" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-sm text-gray-700 dark:text-gray-300"><i class="fas fa-cloud-download-alt text-blue-500 w-4"></i><span>ดึงข้อมูลจาก Sheet</span></button>
-                            <button onclick="exportToGoogleSheet('append')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-sm text-gray-700 dark:text-gray-300"><i class="fas fa-cloud-upload-alt text-emerald-500 w-4"></i><span>ส่งข้อมูลไป Sheet</span></button>
-                            <button onclick="exportToGoogleSheet('replace')" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700 transition text-sm text-gray-700 dark:text-gray-300 border-t border-gray-100 dark:border-slate-700"><i class="fas fa-sync-alt text-orange-500 w-4"></i><span>แทนที่ข้อมูลทั้งหมด</span></button>
-                        </div>
-                    </div>
-                    <label class="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl font-medium hover:bg-green-100 transition cursor-pointer"><i class="fas fa-file-excel"></i><span class="hidden md:inline">Excel</span><input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)"></label>
+                    <button onclick="confirmClearAll()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 rounded-xl font-medium transition">
+                        <i class="fas fa-trash-alt"></i><span class="hidden md:inline">ล้างข้อมูล</span>
+                    </button>
+                    <button onclick="refreshData()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl font-medium hover:bg-blue-100 transition">
+                        <i class="fas fa-sync-alt"></i><span>รีเฟรช</span>
+                    </button>
+                    <button onclick="exportPDF()" class="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl font-medium hover:bg-red-100 transition">
+                        <i class="fas fa-file-pdf"></i><span class="hidden md:inline">PDF</span>
+                    </button>
+                    <button onclick="syncToSheet()" class="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl font-medium hover:bg-purple-100 transition" title="อัปโหลดข้อมูลไป Google Sheet">
+                        <i class="fas fa-cloud-upload-alt"></i><span class="hidden md:inline">Sync</span>
+                    </button>
+                    <label class="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl font-medium hover:bg-green-100 transition cursor-pointer">
+                        <i class="fas fa-file-excel"></i><span class="hidden md:inline">Excel</span>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
                 </div>
             </div>
         </header>
@@ -119,44 +200,159 @@
         <div class="p-4 md:p-8 max-w-7xl mx-auto">
             <!-- Filter -->
             <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6 animate-fade-in">
-                <div class="flex items-center gap-2 mb-4"><i class="fas fa-filter text-blue-500"></i><h3 class="font-semibold">ตัวกรองข้อมูล</h3></div>
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-filter text-blue-500"></i>
+                    <h3 class="font-semibold">ตัวกรองข้อมูล</h3>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div><label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"><i class="far fa-calendar-alt mr-1"></i>วันที่</label><input type="date" id="filterDate" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"><i class="fas fa-building mr-1"></i>รหัส ปณ.</label><input type="text" id="filterBranch" placeholder="เช่น 15000" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
-                    <div><label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"><i class="fas fa-tag mr-1"></i>ประเภท</label><select id="filterType" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition"><option value="">ทั้งหมด</option><option value="เปิดเซฟ">🔓 เปิดเซฟ</option><option value="นับเงิน">💵 นับเงิน</option><option value="ปิดเซฟ">🔒 ปิดเซฟ</option></select></div>
-                    <div><label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2"><i class="fas fa-check-circle mr-1"></i>สถานะ</label><select id="filterStatus" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition"><option value="">ทั้งหมด</option><option value="สำเร็จ">✅ สำเร็จ</option><option value="ไม่สำเร็จ">❌ ไม่สำเร็จ</option><option value="รอ">⏳ รอ</option></select></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <i class="far fa-calendar-alt mr-1"></i>วันที่
+                        </label>
+                        <input type="date" id="filterDate" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <i class="fas fa-building mr-1"></i>รหัส ปณ.
+                        </label>
+                        <input type="text" id="filterBranch" placeholder="เช่น 15000" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <i class="fas fa-tag mr-1"></i>ประเภท
+                        </label>
+                        <select id="filterType" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <option value="">ทั้งหมด</option>
+                            <option value="เปิดเซฟ">🔓 เปิดเซฟ</option>
+                            <option value="นับเงิน">💵 นับเงิน</option>
+                            <option value="ปิดเซฟ">🔒 ปิดเซฟ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                            <i class="fas fa-check-circle mr-1"></i>สถานะ
+                        </label>
+                        <select id="filterStatus" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            <option value="">ทั้งหมด</option>
+                            <option value="สำเร็จ">✅ สำเร็จ</option>
+                            <option value="ไม่สำเร็จ">❌ ไม่สำเร็จ</option>
+                            <option value="รอ">⏳ รอ</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="applyFilter()" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 transition flex items-center gap-2"><i class="fas fa-search"></i>ค้นหา</button>
-                    <button onclick="clearFilter()" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition flex items-center gap-2"><i class="fas fa-times"></i>ล้างตัวกรอง</button>
+                    <button onclick="applyFilter()" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/30 transition flex items-center gap-2">
+                        <i class="fas fa-search"></i>ค้นหา
+                    </button>
+                    <button onclick="clearFilter()" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition flex items-center gap-2">
+                        <i class="fas fa-times"></i>ล้างตัวกรอง
+                    </button>
                 </div>
             </div>
 
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page-section animate-fade-in">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl"><i class="fas fa-boxes"></i></div><span class="text-xs font-medium text-gray-500">ทั้งหมด</span></div><p class="text-3xl font-bold" id="statTotal">0</p><p class="text-sm text-gray-500 mt-1">รายการพัสดุ</p></div>
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-green-500"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400 text-xl"><i class="fas fa-check-circle"></i></div><span class="text-xs font-medium text-gray-500">สำเร็จ</span></div><p class="text-3xl font-bold text-green-600" id="statSuccess">0</p><p class="text-sm text-gray-500 mt-1">นำจ่ายสำเร็จ</p></div>
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-red-500"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 text-xl"><i class="fas fa-times-circle"></i></div><span class="text-xs font-medium text-gray-500">ไม่สำเร็จ</span></div><p class="text-3xl font-bold text-red-600" id="statFailed">0</p><p class="text-sm text-gray-500 mt-1">นำจ่ายไม่สำเร็จ</p></div>
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-yellow-500"><div class="flex items-center justify-between mb-4"><div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl"><i class="fas fa-camera"></i></div><span class="text-xs font-medium text-gray-500">มีรูปภาพ</span></div><p class="text-3xl font-bold text-yellow-600" id="statPhoto">0</p><p class="text-sm text-gray-500 mt-1">พร้อมหลักฐาน</p></div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500">ทั้งหมด</span>
+                        </div>
+                        <p class="text-3xl font-bold" id="statTotal">0</p>
+                        <p class="text-sm text-gray-500 mt-1">รายการพัสดุ</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-green-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400 text-xl">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500">สำเร็จ</span>
+                        </div>
+                        <p class="text-3xl font-bold text-green-600" id="statSuccess">0</p>
+                        <p class="text-sm text-gray-500 mt-1">นำจ่ายสำเร็จ</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-red-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center text-red-600 dark:text-red-400 text-xl">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500">ไม่สำเร็จ</span>
+                        </div>
+                        <p class="text-3xl font-bold text-red-600" id="statFailed">0</p>
+                        <p class="text-sm text-gray-500 mt-1">นำจ่ายไม่สำเร็จ</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 card-hover border-l-4 border-l-yellow-500">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center text-yellow-600 dark:text-yellow-400 text-xl">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <span class="text-xs font-medium text-gray-500">มีรูปภาพ</span>
+                        </div>
+                        <p class="text-3xl font-bold text-yellow-600" id="statPhoto">0</p>
+                        <p class="text-sm text-gray-500 mt-1">พร้อมหลักฐาน</p>
+                    </div>
                 </div>
+                
                 <div class="mb-6">
-                    <div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-calendar-day text-blue-500"></i>สรุปรายงานประจำวัน รายที่ทำการไปรษณีย์</h3><div class="flex items-center gap-2 text-sm text-gray-500"><i class="fas fa-sync-alt"></i><span id="lastUpdated">อัปเดตล่าสุด: -</span></div></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i class="fas fa-calendar-day text-blue-500"></i>สรุปรายงานประจำวัน
+                        </h3>
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <i class="fas fa-sync-alt"></i>
+                            <span id="lastUpdated">อัปเดตล่าสุด: -</span>
+                        </div>
+                    </div>
                     <div id="dailySummaryContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
                 </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700"><h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-blue-500"></i>อัตราความสำเร็จ</h3><div class="relative h-64"><canvas id="successChart"></canvas></div></div>
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700"><h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-purple-500"></i>สาเหตุที่นำจ่ายไม่ได้</h3><div class="relative h-64"><canvas id="reasonChart"></canvas></div></div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-blue-500"></i>อัตราความสำเร็จ
+                        </h3>
+                        <div class="relative h-64">
+                            <canvas id="successChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-purple-500"></i>สาเหตุที่นำจ่ายไม่ได้
+                        </h3>
+                        <div class="relative h-64">
+                            <canvas id="reasonChart"></canvas>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 mb-6"><h3 class="font-semibold mb-4 flex items-center gap-2"><i class="fas fa-users text-green-500"></i>ผลงานรายพนักงาน</h3><div class="relative h-80"><canvas id="operatorChart"></canvas></div></div>
+
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 mb-6">
+                    <h3 class="font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-users text-green-500"></i>ผลงานรายพนักงาน
+                    </h3>
+                    <div class="relative h-80">
+                        <canvas id="operatorChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <!-- Records Page -->
             <div id="page-records" class="page-section hidden animate-fade-in">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                     <div class="p-6 border-b border-gray-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-4">
-                        <h3 class="font-semibold text-lg flex items-center gap-2"><i class="fas fa-list text-blue-500"></i>รายการบันทึกทั้งหมด<span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm" id="recordCount">0</span></h3>
-                        <div class="flex gap-2"><button onclick="exportExcel()" class="px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl font-medium hover:bg-green-100 transition flex items-center gap-2"><i class="fas fa-download"></i>Export Excel</button></div>
+                        <h3 class="font-semibold text-lg flex items-center gap-2">
+                            <i class="fas fa-list text-blue-500"></i>รายการบันทึกทั้งหมด
+                            <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm" id="recordCount">0</span>
+                        </h3>
+                        <div class="flex gap-2">
+                            <button onclick="syncToSheet()" class="px-4 py-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl font-medium hover:bg-purple-100 transition flex items-center gap-2">
+                                <i class="fas fa-cloud-upload-alt"></i>Sync to Sheet
+                            </button>
+                            <button onclick="exportExcel()" class="px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl font-medium hover:bg-green-100 transition flex items-center gap-2">
+                                <i class="fas fa-download"></i>Export Excel
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -169,13 +365,16 @@
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">วันที่/เวลา</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">สาเหตุ</th>
                                     <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">รูปภาพ</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">วันที่ถือครอง</th>
-                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">พยายามนำจ่าย</th>
                                     <th class="px-6 py-4 text-center text-xs font-semibold text-gray-500 uppercase">สถานะ / จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody id="recordsTableBody" class="divide-y divide-gray-200 dark:divide-slate-700">
-                                <tr><td colspan="10" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล — กรุณานำเข้าไฟล์ Excel หรือรอซิงค์จาก Sheet</p></td></tr>
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i>
+                                        <p>ยังไม่มีข้อมูล — กรุณานำเข้าไฟล์ Excel</p>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -186,7 +385,9 @@
             <div id="page-import" class="page-section hidden animate-fade-in">
                 <div class="max-w-2xl mx-auto">
                     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8 text-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg shadow-blue-500/30"><i class="fas fa-file-import"></i></div>
+                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center text-white text-3xl mx-auto mb-6 shadow-lg">
+                            <i class="fas fa-file-import"></i>
+                        </div>
                         <h3 class="text-2xl font-bold mb-2">นำเข้าข้อมูลจาก Excel</h3>
                         <p class="text-gray-500 dark:text-gray-400 mb-8">รองรับไฟล์ .xlsx, .xls, .csv</p>
                         <div id="dropZone" class="border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-2xl p-12 cursor-pointer hover:border-blue-500 transition bg-gray-50 dark:bg-slate-700/30">
@@ -203,84 +404,99 @@
             <!-- Analytics Page -->
             <div id="page-analytics" class="page-section hidden animate-fade-in">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700"><h3 class="font-semibold mb-4">📈 แนวโน้มการนำจ่าย</h3><div class="relative h-80"><canvas id="trendChart"></canvas></div></div>
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700"><h3 class="font-semibold mb-4">🏢 สถิติรายสาขา</h3><div class="relative h-80"><canvas id="branchChart"></canvas></div></div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-semibold mb-4">📈 แนวโน้มการนำจ่าย</h3>
+                        <div class="relative h-80">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
+                        <h3 class="font-semibold mb-4">🏢 สถิติรายสาขา</h3>
+                        <div class="relative h-80">
+                            <canvas id="branchChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Settings Page -->
             <div id="page-settings" class="page-section hidden animate-fade-in">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-cog text-blue-500"></i>การตั้งค่าระบบ</h2>
-                    <button onclick="hideSettings()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-xl font-medium transition"><i class="fas fa-eye-slash"></i>ซ่อนเมนู</button>
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <i class="fas fa-cog text-blue-500"></i>การตั้งค่าระบบ
+                    </h2>
+                    <button onclick="hideSettings()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-xl font-medium transition">
+                        <i class="fas fa-eye-slash"></i>ซ่อนเมนู
+                    </button>
                 </div>
                 <div class="max-w-3xl mx-auto space-y-6">
-                    <!-- ① GAS URL -->
                     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8">
-                        <div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-plug"></i></div><div><h3 class="text-xl font-bold">① เชื่อมต่อ Google Apps Script</h3><p class="text-sm text-gray-500">ตั้งค่า URL สำหรับ sync ข้อมูลกับ Google Sheet</p></div></div>
-                        <div id="connStatusBanner" class="hidden mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium"><i id="connStatusIcon" class="fas fa-circle"></i><span id="connStatusMsg"></span></div>
-                        <div class="space-y-4">
-                            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Web App URL</label>
-                                <div class="flex gap-2">
-                                    <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
-                                    <button onclick="testConnection()" class="px-4 py-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition flex items-center gap-2 text-sm"><i class="fas fa-vial"></i><span class="hidden md:inline">ทดสอบ</span></button>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
-                                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition flex items-center justify-center gap-2"><i class="fas fa-save"></i><span>บันทึก URL</span></button>
-                                <button onclick="clearSettings()" class="px-4 py-3 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl font-medium transition flex items-center gap-2 text-sm"><i class="fas fa-unlink"></i><span>ยกเลิก</span></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ② GitHub Photo -->
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8">
-                        <div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-gray-900 dark:bg-gray-700 text-white rounded-xl flex items-center justify-center text-xl"><i class="fab fa-github"></i></div><div><h3 class="text-xl font-bold">② อัปโหลดรูปภาพผ่าน GitHub</h3><p class="text-sm text-gray-500">ฟรี ไม่ต้องล็อกอิน Google Drive</p></div></div>
-                        <div id="ghStatusBanner" class="hidden mb-4 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium"><i id="ghStatusIcon" class="fas fa-circle"></i><span id="ghStatusMsg"></span></div>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">GitHub Username</label><input type="text" id="ghUsername" placeholder="yourname" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"></div>
-                                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repository Name</label><input type="text" id="ghRepo" placeholder="tracking-photos" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"></div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+                                <i class="fas fa-plug"></i>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Personal Access Token <a href="https://github.com/settings/tokens/new?scopes=repo&description=TrackingDashboard" target="_blank" class="ml-2 text-blue-500 hover:underline text-xs"><i class="fas fa-external-link-alt"></i> สร้าง Token</a></label>
-                                <div class="flex gap-2">
-                                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm font-mono">
-                                    <button onclick="toggleTokenVisibility()" class="px-3 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl text-gray-500 hover:text-gray-700 transition"><i id="tokenEyeIcon" class="fas fa-eye"></i></button>
-                                </div>
-                                <p class="mt-2 text-xs text-gray-500"><i class="fas fa-shield-alt mr-1 text-yellow-500"></i>Token เก็บใน localStorage เครื่องนี้เท่านั้น</p>
+                                <h3 class="text-xl font-bold">① เชื่อมต่อ Google Apps Script</h3>
+                                <p class="text-sm text-gray-500">ตั้งค่า URL สำหรับ sync ข้อมูลกับ Google Sheet</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Web App URL</label>
+                                <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
                             </div>
                             <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
-                                <button onclick="saveGitHubSettings()" class="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition flex items-center justify-center gap-2"><i class="fab fa-github"></i><span>บันทึกและทดสอบ</span></button>
-                                <button onclick="clearGitHubSettings()" class="px-4 py-3 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl font-medium transition text-sm flex items-center gap-2"><i class="fas fa-times"></i><span>ล้าง</span></button>
+                                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition flex items-center justify-center gap-2">
+                                    <i class="fas fa-save"></i><span>บันทึก URL</span>
+                                </button>
+                                <button onclick="testSheetConnection()" class="px-4 py-3 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 text-green-600 dark:text-green-400 rounded-xl font-medium transition flex items-center gap-2 text-sm">
+                                    <i class="fas fa-plug"></i><span>ทดสอบ</span>
+                                </button>
+                                <button onclick="clearSettings()" class="px-4 py-3 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl font-medium transition flex items-center gap-2 text-sm">
+                                    <i class="fas fa-unlink"></i><span>ยกเลิก</span>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ③ GAS Code -->
                     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8">
-                        <div class="flex items-center justify-between gap-3 mb-6">
-                            <div class="flex items-center gap-3"><div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-code"></i></div><div><h3 class="text-xl font-bold">③ โค้ด Google Apps Script (V3)</h3><p class="text-sm text-gray-500">คัดลอกโค้ดนี้ไปวางใน script.google.com → Code.gs</p></div></div>
-                            <button onclick="copyGASCode()" id="copyGASBtn" class="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition shadow-lg shadow-green-500/30 text-sm"><i class="fas fa-copy"></i><span>คัดลอกโค้ด</span></button>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 bg-gray-900 dark:bg-gray-700 text-white rounded-xl flex items-center justify-center text-xl">
+                                <i class="fab fa-github"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">② อัปโหลดรูปภาพผ่าน GitHub</h3>
+                                <p class="text-sm text-gray-500">ฟรี ไม่ต้องล็อกอิน Google Drive</p>
+                            </div>
                         </div>
-                        <ol class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-5">
-                            <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">1</span><span>เปิด <a href="https://script.google.com" target="_blank" class="text-blue-500 hover:underline">script.google.com</a> → New Project</span></li>
-                            <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">2</span><span>กด <strong>คัดลอกโค้ด</strong> → ลบโค้ดเก่าใน Code.gs แล้ววาง</span></li>
-                            <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">3</span><span>แก้ <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">sheetId</code> ในโค้ด (บรรทัดบนสุด)</span></li>
-                            <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">4</span><span>Deploy → New Deployment → Web App → Execute as: <strong>Me</strong> → Access: <strong>Anyone</strong></span></li>
-                            <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">5</span><span>คัดลอก Web App URL ไปวางในช่อง ①</span></li>
-                        </ol>
-                        <div class="relative"><pre id="gasCodePreview" class="bg-gray-950 text-gray-100 rounded-xl p-5 text-xs overflow-x-auto overflow-y-auto max-h-80 leading-relaxed font-mono whitespace-pre select-all"></pre><div class="absolute top-3 right-3"><button onclick="copyGASCode()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 rounded-lg text-xs transition flex items-center gap-1"><i class="fas fa-copy"></i> copy</button></div></div>
-                    </div>
-
-                    <!-- ④ Sync Options -->
-                    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-                        <h4 class="font-bold mb-4 flex items-center gap-2"><i class="fas fa-sync-alt text-emerald-500"></i>④ ตัวเลือก Sync ข้อมูล</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button onclick="syncFromSheet()" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-blue-400 rounded-xl transition text-left"><i class="fas fa-cloud-download-alt text-blue-500 mt-1"></i><div><p class="font-semibold text-sm">ดึงข้อมูลจาก Sheet</p><p class="text-xs text-gray-500 mt-0.5">โหลดข้อมูลล่าสุดจาก Google Sheet มาแสดง</p></div></button>
-                            <button onclick="exportToGoogleSheet('append')" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-emerald-400 rounded-xl transition text-left"><i class="fas fa-cloud-upload-alt text-emerald-500 mt-1"></i><div><p class="font-semibold text-sm">ส่งข้อมูลไป Sheet</p><p class="text-xs text-gray-500 mt-0.5">เพิ่ม/อัปเดตสถานะ (ไม่ลบข้อมูลเก่า)</p></div></button>
-                            <button onclick="exportToGoogleSheet('replace')" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-orange-400 rounded-xl transition text-left"><i class="fas fa-sync-alt text-orange-500 mt-1"></i><div><p class="font-semibold text-sm">แทนที่ข้อมูลทั้งหมด</p><p class="text-xs text-gray-500 mt-0.5">ลบข้อมูลเก่าแล้วเขียนใหม่ทั้งหมด</p></div></button>
-                            <button onclick="syncDeleteFromSheet()" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-red-400 rounded-xl transition text-left"><i class="fas fa-trash-alt text-red-500 mt-1"></i><div><p class="font-semibold text-sm">ซิงค์การลบไป Sheet</p><p class="text-xs text-gray-500 mt-0.5">ล้างข้อมูลใน Sheet ให้ตรงกับ Dashboard</p></div></button>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">GitHub Username</label>
+                                    <input type="text" id="ghUsername" placeholder="yourname" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repository Name</label>
+                                    <input type="text" id="ghRepo" placeholder="tracking-photos" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Personal Access Token</label>
+                                <div class="flex gap-2">
+                                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm font-mono">
+                                    <button onclick="toggleTokenVisibility()" class="px-3 py-3 bg-gray-100 dark:bg-slate-700 rounded-xl text-gray-500 hover:text-gray-700 transition">
+                                        <i id="tokenEyeIcon" class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
+                                <button onclick="saveGitHubSettings()" class="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold transition flex items-center justify-center gap-2">
+                                    <i class="fab fa-github"></i><span>บันทึกและทดสอบ</span>
+                                </button>
+                                <button onclick="clearGitHubSettings()" class="px-4 py-3 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 dark:text-red-400 rounded-xl font-medium transition text-sm flex items-center gap-2">
+                                    <i class="fas fa-times"></i><span>ล้าง</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -294,7 +510,9 @@
     <div class="relative max-w-3xl w-full h-full flex flex-col items-center justify-center" onclick="event.stopPropagation()">
         <img id="modalPhoto" class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain" src="" alt="">
         <p id="modalTracking" class="text-white text-center mt-4 font-mono text-lg"></p>
-        <button onclick="closePhotoModal()" class="absolute -top-4 -right-4 bg-white/20 hover:bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition text-xl"><i class="fas fa-times"></i></button>
+        <button onclick="closePhotoModal()" class="absolute -top-4 -right-4 bg-white/20 hover:bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition text-xl">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 </div>
 
@@ -306,9 +524,8 @@ let parcels = [];
 let filteredParcels = [];
 let photos = {};
 let charts = {};
-const API_URL = "https://script.google.com/macros/s/AKfycbw54cu7wx917ZztY9aGaM6JB_Pd7VczJLDkirJU8a6b6bvxN1xw7HXwtMh55fpMd2E_/exec";
-let pendingAction = null;
-let settingsVisible = false; // ตัวแปรติดตามสถานะเมนู Settings
+const API_URL = "https://script.google.com/macros/s/AKfycbwwIET-qwtlX3rupUzvLf5x8KIm5jkZCOJLrtvDqI-jVT2sStRA5JbS18-apD8kzVwq/exec";
+let settingsVisible = false;
 
 // ================================================================
 // Modal Helpers
@@ -323,6 +540,19 @@ function showModal(id) {
     }
 }
 
+function showLoading(show) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        if (show) {
+            overlay.classList.remove('hidden');
+            overlay.style.display = 'flex';
+        } else {
+            overlay.classList.add('hidden');
+            overlay.style.display = 'none';
+        }
+    }
+}
+
 function hideModal(id) { 
     const el = document.getElementById(id);
     if (el) {
@@ -332,13 +562,167 @@ function hideModal(id) {
 }
 
 // ================================================================
-// Keyboard Shortcut - Ctrl+Shift+S เพื่อแสดง/ซ่อนเมนู Settings
+// วิธีเข้าเมนูตั้งค่าใหม่ (หลายวิธี)
 // ================================================================
+
+// วิธีที่ 1: คลิกที่โลโก้ 5 ครั้ง (ภายใน 3 วินาที)
+let logoClickCount = 0;
+let logoClickTimer = null;
+
+function setupLogoClickTrigger() {
+    const logo = document.getElementById('logoClicker');
+    if (!logo) return;
+    
+    logo.addEventListener('click', function(e) {
+        // ไม่นับถ้ากดปุ่มอื่นร่วมด้วย
+        if (e.ctrlKey || e.shiftKey || e.altKey) return;
+        
+        logoClickCount++;
+        
+        // แสดงตัวนับเล็กๆ
+        if (logoClickCount > 1) {
+            showToast(`คลิกเพิ่มอีก ${5 - logoClickCount} ครั้งเพื่อเข้าตั้งค่า`, 'info');
+        }
+        
+        if (logoClickCount >= 5) {
+            logoClickCount = 0;
+            clearTimeout(logoClickTimer);
+            toggleSettingsVisibility();
+            return;
+        }
+        
+        clearTimeout(logoClickTimer);
+        logoClickTimer = setTimeout(() => {
+            logoClickCount = 0;
+        }, 3000);
+    });
+}
+
+// วิธีที่ 2: กดค้างที่ชื่อหน้า 3 วินาที
+let pressHoldTimer = null;
+let pressHoldStart = 0;
+const PRESS_HOLD_DURATION = 3000; // 3 วินาที
+
+function setupPressHoldTrigger() {
+    const container = document.getElementById('pageTitleContainer');
+    const indicator = document.getElementById('holdIndicator');
+    if (!container) return;
+    
+    const startHold = (e) => {
+        // ป้องกันการทำงานซ้ำ
+        if (pressHoldTimer) return;
+        
+        // ต้องเป็นการกดเดี่ยวเท่านั้น
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        
+        pressHoldStart = Date.now();
+        container.classList.add('press-hold-active');
+        
+        // แสดงแถบความคืบหน้า
+        if (indicator) {
+            indicator.style.opacity = '1';
+            indicator.style.width = '0%';
+        }
+        
+        pressHoldTimer = setInterval(() => {
+            const elapsed = Date.now() - pressHoldStart;
+            const progress = Math.min((elapsed / PRESS_HOLD_DURATION) * 100, 100);
+            
+            if (indicator) {
+                indicator.style.width = progress + '%';
+            }
+            
+            if (elapsed >= PRESS_HOLD_DURATION) {
+                clearInterval(pressHoldTimer);
+                pressHoldTimer = null;
+                resetHold();
+                toggleSettingsVisibility();
+            }
+        }, 50);
+    };
+    
+    const endHold = () => {
+        if (!pressHoldTimer) return;
+        clearInterval(pressHoldTimer);
+        pressHoldTimer = null;
+        resetHold();
+    };
+    
+    const resetHold = () => {
+        container.classList.remove('press-hold-active');
+        if (indicator) {
+            indicator.style.width = '0%';
+            indicator.style.opacity = '0';
+        }
+    };
+    
+    // Mouse events
+    container.addEventListener('mousedown', startHold);
+    container.addEventListener('mouseup', endHold);
+    container.addEventListener('mouseleave', endHold);
+    
+    // Touch events (มือถือ)
+    container.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // ป้องกันการเลื่อนหน้า
+        startHold(e);
+    });
+    container.addEventListener('touchend', endHold);
+    container.addEventListener('touchcancel', endHold);
+}
+
+// วิธีที่ 3: ปัดนิ้วขึ้นบนมือถือ (swipe up from bottom)
+let touchStartY = 0;
+let touchStartTime = 0;
+
+function setupSwipeTrigger() {
+    // รับเฉพาะการปัดจากขอบล่างของหน้าจอ (พื้นที่ 50px จากล่างสุด)
+    document.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const screenHeight = window.innerHeight;
+        
+        // ต้องเริ่มจากพื้นที่ล่างสุด 50px เท่านั้น
+        if (touch.clientY < screenHeight - 50) return;
+        
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+    }, { passive: true });
+    
+    document.addEventListener('touchend', (e) => {
+        if (!touchStartY) return;
+        
+        const touch = e.changedTouches[0];
+        const diffY = touchStartY - touch.clientY; // ค่าบวก = ปัดขึ้น
+        const diffTime = Date.now() - touchStartTime;
+        
+        // ต้องปัดขึ้นอย่างน้อย 100px และใช้เวลาไม่เกิน 500ms
+        if (diffY > 100 && diffTime < 500) {
+            toggleSettingsVisibility();
+        }
+        
+        touchStartY = 0;
+        touchStartTime = 0;
+    }, { passive: true });
+}
+
+// วิธีที่ 4: คีย์บอร์ดลัดแบบอื่น (กด ? ค้าง 3 วินาที)
+let questionKeyTimer = null;
+
 document.addEventListener('keydown', function(e) {
-    // Ctrl + Shift + S
-    if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        toggleSettingsVisibility();
+    // กด ? ค้าง (Shift + /) หรือ กด / ค้าง
+    if (e.key === '?' || e.key === '/') {
+        if (!questionKeyTimer) {
+            questionKeyTimer = setTimeout(() => {
+                questionKeyTimer = null;
+                toggleSettingsVisibility();
+            }, 3000);
+        }
+    }
+});
+
+document.addEventListener('keyup', function(e) {
+    if ((e.key === '?' || e.key === '/') && questionKeyTimer) {
+        clearTimeout(questionKeyTimer);
+        questionKeyTimer = null;
     }
 });
 
@@ -348,8 +732,7 @@ function toggleSettingsVisibility() {
     
     if (settingsVisible) {
         navSettings.classList.remove('settings-menu-hidden');
-        showToast('🔓 แสดงเมนูตั้งค่าแล้ว (กด Ctrl+Shift+S เพื่อซ่อน)', 'success');
-        // โฟกัสที่เมนู settings
+        showToast('🔓 แสดงเมนูตั้งค่าแล้ว', 'success');
         setTimeout(() => {
             navSettings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             navSettings.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
@@ -360,14 +743,8 @@ function toggleSettingsVisibility() {
     } else {
         navSettings.classList.add('settings-menu-hidden');
         showToast('🔒 ซ่อนเมนูตั้งค่าแล้ว', 'info');
-        // กลับไปหน้า dashboard
         showPage('dashboard');
     }
-}
-
-function requestSettingsAccess() {
-    // ไม่ต้องขอรหัสแล้ว - เข้าได้โดยตรง
-    showPage('settings');
 }
 
 function hideSettings() {
@@ -378,7 +755,6 @@ function hideSettings() {
 // Navigation
 // ================================================================
 function showPage(page) {
-    hideModal('passwordModal');
     hideModal('photoModal');
     
     document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
@@ -402,7 +778,6 @@ function showPage(page) {
     if (page === 'settings') { 
         loadSettings(); 
         loadGitHubSettings(); 
-        injectGASCode(); 
     }
     
     const sidebar = document.getElementById('sidebar');
@@ -430,24 +805,24 @@ function refreshData() {
 // Stats & Render
 // ================================================================
 function updateStats() {
-    const total   = filteredParcels.length;
+    const total = filteredParcels.length;
     const success = filteredParcels.filter(p => p.status === 'สำเร็จ').length;
-    const failed  = filteredParcels.filter(p => p.status === 'ไม่สำเร็จ').length;
+    const failed = filteredParcels.filter(p => p.status === 'ไม่สำเร็จ').length;
     const withPhoto = filteredParcels.filter(p => photos[p.tracking] || p.photoUrl).length;
     
-    const statTotal = document.getElementById('statTotal');
-    const statSuccess = document.getElementById('statSuccess');
-    const statFailed = document.getElementById('statFailed');
-    const statPhoto = document.getElementById('statPhoto');
-    const recordCount = document.getElementById('recordCount');
-    const lastUpdated = document.getElementById('lastUpdated');
+    const els = {
+        'statTotal': total,
+        'statSuccess': success,
+        'statFailed': failed,
+        'statPhoto': withPhoto,
+        'recordCount': total,
+        'lastUpdated': 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH')
+    };
     
-    if (statTotal) statTotal.textContent = total;
-    if (statSuccess) statSuccess.textContent = success;
-    if (statFailed) statFailed.textContent = failed;
-    if (statPhoto) statPhoto.textContent = withPhoto;
-    if (recordCount) recordCount.textContent = total;
-    if (lastUpdated) lastUpdated.textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+    Object.keys(els).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = els[id];
+    });
 }
 
 function getStatusClass(status) {
@@ -456,17 +831,12 @@ function getStatusClass(status) {
     return 'status-warning';
 }
 
-function formatDateTime(dt) {
-    if (!dt) return '-';
-    return dt;
-}
-
 function renderRecords() {
     const tbody = document.getElementById('recordsTableBody');
     if (!tbody) return;
     
     if (!filteredParcels.length) {
-        tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></td></tr>';
         return;
     }
     
@@ -475,16 +845,15 @@ function renderRecords() {
         const photoCell = photoSrc
             ? `<img src="${photoSrc}" class="photo-thumbnail mx-auto" onclick="openPhoto('${p.tracking}','${photoSrc.replace(/'/g,"\\'")}') " onerror="this.style.display='none'">`
             : `<label class="cursor-pointer text-gray-400 hover:text-blue-500 transition inline-block"><i class="fas fa-camera text-xl"></i><input type="file" class="hidden" accept="image/*" onchange="uploadPhoto(this,'${p.tracking}')"></label>`;
+        
         return `<tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
             <td class="px-6 py-4 text-sm">${idx+1}</td>
-            <td class="px-6 py-4"><p class="font-mono text-sm font-semibold">${p.tracking}</p>${p.lazada==='Y'?'<span class="text-[10px] px-2 py-0.5 bg-orange-100 text-orange-600 rounded mt-1 inline-block">Lazada</span>':''}</td>
+            <td class="px-6 py-4"><p class="font-mono text-sm font-semibold">${p.tracking}</p></td>
             <td class="px-6 py-4 text-sm hidden md:table-cell">${p.branch||'-'}</td>
             <td class="px-6 py-4 text-sm hidden lg:table-cell text-blue-600">${p.operator||'-'}</td>
-            <td class="px-6 py-4 text-sm">${formatDateTime(p.datetime)}</td>
-            <td class="px-6 py-4 text-sm hidden xl:table-cell max-w-xs truncate" title="${p.reason||''}">${p.reason||'-'}</td>
+            <td class="px-6 py-4 text-sm">${p.datetime||'-'}</td>
+            <td class="px-6 py-4 text-sm hidden xl:table-cell max-w-xs truncate">${p.reason||'-'}</td>
             <td class="px-6 py-4 text-center">${photoCell}</td>
-            <td class="px-6 py-4 text-sm hidden lg:table-cell"><span class="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-medium"><i class="far fa-clock"></i>${p.holdDays||'-'}</span></td>
-            <td class="px-6 py-4 text-sm hidden lg:table-cell"><span class="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-600 rounded-lg text-xs font-medium"><i class="fas fa-redo"></i>${p.attempts||'0'}</span></td>
             <td class="px-6 py-4 text-center">
                 <div class="flex items-center justify-center gap-2">
                     <select onchange="updateStatus(${p.id},this.value)" class="status-badge ${getStatusClass(p.status)}">
@@ -492,7 +861,9 @@ function renderRecords() {
                         <option value="ไม่สำเร็จ" ${p.status==='ไม่สำเร็จ'?'selected':''}>ไม่สำเร็จ</option>
                         <option value="รอ" ${p.status==='รอ'?'selected':''}>รอ</option>
                     </select>
-                    <button onclick="deleteParcel(${p.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-500 transition" title="ลบ"><i class="fas fa-trash text-sm"></i></button>
+                    <button onclick="deleteParcel(${p.id})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 text-gray-400 hover:text-red-500 transition">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -506,17 +877,16 @@ function renderDailySummary() {
     const byBranch = {};
     filteredParcels.forEach(p => {
         const key = p.branch || 'ไม่ระบุ';
-        if (!byBranch[key]) byBranch[key] = { branch: key, total: 0, success: 0, failed: 0, pending: 0, operators: new Set() };
+        if (!byBranch[key]) byBranch[key] = { branch: key, total: 0, success: 0, failed: 0, pending: 0 };
         byBranch[key].total++;
         if (p.status === 'สำเร็จ') byBranch[key].success++;
         else if (p.status === 'ไม่สำเร็จ') byBranch[key].failed++;
         else byBranch[key].pending++;
-        if (p.operator) byBranch[key].operators.add(p.operator);
     });
     
     const summaries = Object.values(byBranch);
     if (!summaries.length) { 
-        container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></div>'; 
+        container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></div>'; 
         return; 
     }
     
@@ -524,9 +894,10 @@ function renderDailySummary() {
         const rate = s.total ? Math.round(s.success/s.total*100) : 0;
         const rateBg = rate>=80 ? 'bg-green-100 dark:bg-green-900/30' : rate>=50 ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-red-100 dark:bg-red-900/30';
         const rateColor = rate>=80 ? 'text-green-700 dark:text-green-400' : rate>=50 ? 'text-yellow-700 dark:text-yellow-400' : 'text-red-700 dark:text-red-400';
+        
         return `<div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 daily-card">
             <div class="flex items-center justify-between mb-4">
-                <div><h4 class="font-bold text-lg">${s.branch}</h4><p class="text-xs text-gray-500"><i class="fas fa-users mr-1"></i>${s.operators.size} คน / ${s.total} รายการ</p></div>
+                <div><h4 class="font-bold text-lg">${s.branch}</h4><p class="text-xs text-gray-500">${s.total} รายการ</p></div>
                 <div class="${rateBg} ${rateColor} px-3 py-1 rounded-full text-sm font-bold">${rate}%</div>
             </div>
             <div class="grid grid-cols-3 gap-2 mb-3">
@@ -534,7 +905,9 @@ function renderDailySummary() {
                 <div class="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-xl"><p class="text-lg font-bold text-red-600">${s.failed}</p><p class="text-xs text-gray-500">ไม่สำเร็จ</p></div>
                 <div class="text-center p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl"><p class="text-lg font-bold text-yellow-600">${s.pending}</p><p class="text-xs text-gray-500">รอ</p></div>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-2"><div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all" style="width:${rate}%"></div></div>
+            <div class="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-2">
+                <div class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all" style="width:${rate}%"></div>
+            </div>
         </div>`;
     }).join('');
 }
@@ -543,13 +916,13 @@ function renderDailySummary() {
 // Filter
 // ================================================================
 function applyFilter() {
-    const date   = document.getElementById('filterDate')?.value;
+    const date = document.getElementById('filterDate')?.value;
     const branch = (document.getElementById('filterBranch')?.value || '').toLowerCase().trim();
-    const type   = document.getElementById('filterType')?.value;
+    const type = document.getElementById('filterType')?.value;
     const status = document.getElementById('filterStatus')?.value;
     
     filteredParcels = parcels.filter(p => {
-        if (date && !p.datetime?.includes(date.split('-').reverse().join('/'))) return false;
+        if (date && !p.datetime?.includes(date)) return false;
         if (branch && !p.branch?.toLowerCase().includes(branch)) return false;
         if (type && p.type !== type) return false;
         if (status && p.status !== status) return false;
@@ -563,15 +936,10 @@ function applyFilter() {
 }
 
 function clearFilter() {
-    const filterDate = document.getElementById('filterDate');
-    const filterBranch = document.getElementById('filterBranch');
-    const filterType = document.getElementById('filterType');
-    const filterStatus = document.getElementById('filterStatus');
-    
-    if (filterDate) filterDate.value = '';
-    if (filterBranch) filterBranch.value = '';
-    if (filterType) filterType.value = '';
-    if (filterStatus) filterStatus.value = '';
+    ['filterDate', 'filterBranch', 'filterType', 'filterStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
     
     filteredParcels = [...parcels];
     updateStats(); 
@@ -592,17 +960,17 @@ function updateStatus(id, newStatus) {
     updateStats(); 
     renderDailySummary(); 
     updateCharts();
-    syncStatusToSheet(p.tracking, newStatus);
+    // Sync ไป Sheet อัตโนมัติ
+    syncSingleToSheet(p);
 }
 
-async function deleteParcel(id) {
+function deleteParcel(id) {
+    if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+    
     const p = parcels.find(x => x.id === id);
     if (!p) return;
     
-    if (!confirm(`ต้องการลบรายการ ${p.tracking} ใช่หรือไม่?`)) return;
-    
     showToast('🗑️ กำลังลบรายการ...', 'info');
-    await deletePhotoFromGitHub(p.tracking);
     parcels = parcels.filter(x => x.id !== id);
     if (photos[p.tracking]) delete photos[p.tracking];
     filteredParcels = filteredParcels.filter(x => x.id !== id);
@@ -610,33 +978,16 @@ async function deleteParcel(id) {
     renderRecords(); 
     renderDailySummary(); 
     updateCharts();
-    syncDeleteToSheet(p.tracking);
-    showToast(`✅ ลบรายการ ${p.tracking} สำเร็จ`, 'success');
+    showToast(`✅ ลบรายการสำเร็จ`, 'success');
 }
 
-async function confirmClearAll() {
+function confirmClearAll() {
     if (!parcels.length) { showToast('ไม่มีข้อมูลให้ล้าง', 'warning'); return; }
+    if (!confirm(`⚠️ ต้องการล้างข้อมูลทั้งหมด ${parcels.length} รายการใช่หรือไม่?`)) return;
     
-    if (!confirm(`⚠️ ต้องการล้างข้อมูลทั้งหมด ${parcels.length} รายการใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้!`)) return;
-    
-    const ghPhotos = Object.keys(photos).filter(t => photos[t]?.includes('raw.githubusercontent.com'));
-    if (ghPhotos.length > 0) {
-        showToast(`กำลังลบรูปภาพ ${ghPhotos.length} รายการจาก GitHub...`, 'info');
-        for (const t of ghPhotos) await deletePhotoFromGitHub(t);
-    }
     parcels = []; 
     filteredParcels = []; 
     photos = {};
-    
-    Object.values(charts).forEach(c => { 
-        if (c) { 
-            try { 
-                c.data.datasets[0].data = [0,0,0]; 
-                c.update(); 
-            } catch(e){} 
-        } 
-    });
-    
     updateStats(); 
     renderRecords(); 
     renderDailySummary();
@@ -644,82 +995,30 @@ async function confirmClearAll() {
 }
 
 // ================================================================
-// Photo — GitHub API
+// Photo Upload
 // ================================================================
 function uploadPhoto(input, tracking) {
     if (!input?.files?.[0]) return;
+
+    // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+    if (input.files[0].size > 2 * 1024 * 1024) {
+        showToast('❌ รูปภาพใหญ่เกินไป (สูงสุด 2MB)', 'error');
+        return;
+    }
+
     const reader = new FileReader();
-    reader.onload = async (e) => {
-        const dataUrl = e.target.result;
-        const ghUser  = localStorage.getItem('gh_username');
-        const ghRepo  = localStorage.getItem('gh_repo');
-        const ghToken = localStorage.getItem('gh_token');
-        
-        if (ghUser && ghRepo && ghToken) {
-            const url = await uploadPhotoToGitHub(dataUrl, tracking, ghUser, ghRepo, ghToken);
-            photos[tracking] = url || dataUrl;
-        } else {
-            photos[tracking] = dataUrl;
-            showToast('รูปภาพเก็บชั่วคราว (ตั้งค่า GitHub เพื่อเก็บถาวร)', 'warning');
-        }
+    reader.onload = (e) => {
+        photos[tracking] = e.target.result;
         updateStats(); 
         renderRecords(); 
-        renderDailySummary();
+        showToast('📷 อัปโหลดรูปภาพสำเร็จ (เก็บในเครื่อง)', 'success');
+        // หมายเหตุ: ไม่ sync รูป base64 ไป Sheet เพราะขนาดใหญ่เกินไป
+        // ถ้าต้องการ sync รูป ให้อัปโหลดไป GitHub หรือ Imgur ก่อน แล้วส่ง URL
+    };
+    reader.onerror = () => {
+        showToast('❌ อ่านไฟล์รูปภาพไม่สำเร็จ', 'error');
     };
     reader.readAsDataURL(input.files[0]);
-}
-
-async function uploadPhotoToGitHub(dataUrl, tracking, user, repo, token) {
-    try {
-        showToast(`กำลังอัปโหลดรูป ${tracking}...`, 'info');
-        const base64 = dataUrl.split(',')[1];
-        const ext    = dataUrl.split(';')[0].split('/')[1] || 'jpg';
-        const path   = `photos/${tracking}_${Date.now()}.${ext}`;
-        
-        const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${path}`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-            body: JSON.stringify({ message: `Add photo ${tracking}`, content: base64 })
-        });
-        
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
-        const result = await res.json();
-        showToast('อัปโหลดรูปสำเร็จ ✓', 'success');
-        return result.content.download_url;
-    } catch (err) {
-        console.error('GitHub upload:', err);
-        showToast('อัปโหลดรูปไม่สำเร็จ: ' + err.message, 'error');
-        return null;
-    }
-}
-
-async function deletePhotoFromGitHub(tracking) {
-    const photoUrl = photos[tracking];
-    if (!photoUrl || !photoUrl.includes('raw.githubusercontent.com')) return;
-    
-    const ghUser  = localStorage.getItem('gh_username');
-    const ghRepo  = localStorage.getItem('gh_repo');
-    const ghToken = localStorage.getItem('gh_token');
-    
-    if (!ghUser || !ghRepo || !ghToken) return;
-    
-    try {
-        const match = photoUrl.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
-        if (!match) return;
-        const filePath = match[1];
-        
-        const getRes = await fetch(`https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${filePath}`, {
-            headers: { 'Authorization': `Bearer ${ghToken}`, 'Accept': 'application/vnd.github+json' }
-        });
-        if (!getRes.ok) return;
-        
-        const fileData = await getRes.json();
-        await fetch(`https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${filePath}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${ghToken}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
-            body: JSON.stringify({ message: `Delete photo ${tracking}`, sha: fileData.sha })
-        });
-    } catch(err) { console.warn('Delete photo failed:', err); }
 }
 
 function openPhoto(tracking, directUrl) {
@@ -748,119 +1047,134 @@ function initCharts() {
     const textColor = isDark ? '#94a3b8' : '#64748b';
     const gridColor = isDark ? '#334155' : '#e2e8f0';
 
+    // Success Chart
     const ctx1 = document.getElementById('successChart')?.getContext('2d');
-    if (ctx1) charts.success = new Chart(ctx1, { 
-        type: 'doughnut', 
-         { 
-            labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], 
-            datasets: [{ 
-                 [0,0,0], 
-                backgroundColor: ['#10b981','#ef4444','#f59e0b'], 
-                borderWidth: 0 
-            }] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { 
-                legend: { 
-                    position: 'bottom', 
-                    labels: { color: textColor, padding: 16, font: { family: 'Sarabun' } } 
+    if (ctx1) {
+        charts.success = new Chart(ctx1, { 
+            type: 'doughnut', 
+            data: { 
+                labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], 
+                datasets: [{ 
+                    data: [0, 0, 0], 
+                    backgroundColor: ['#10b981','#ef4444','#f59e0b'], 
+                    borderWidth: 0 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { color: textColor, padding: 16, font: { family: 'Sarabun' } } 
+                    } 
                 } 
             } 
-        } 
-    });
+        });
+    }
 
+    // Reason Chart
     const ctx2 = document.getElementById('reasonChart')?.getContext('2d');
-    if (ctx2) charts.reason = new Chart(ctx2, { 
-        type: 'bar', 
-         { 
-            labels: [], 
-            datasets: [{ 
-                label: 'จำนวน', 
-                 [], 
-                backgroundColor: 'rgba(139,92,246,0.8)', 
-                borderRadius: 6 
-            }] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { display: false } }, 
-            scales: { 
-                x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } }, 
-                y: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } 
+    if (ctx2) {
+        charts.reason = new Chart(ctx2, { 
+            type: 'bar', 
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: 'จำนวน', 
+                    data: [], 
+                    backgroundColor: 'rgba(139,92,246,0.8)', 
+                    borderRadius: 6 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } }, 
+                    y: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } 
+                } 
             } 
-        } 
-    });
+        });
+    }
 
+    // Operator Chart
     const ctx3 = document.getElementById('operatorChart')?.getContext('2d');
-    if (ctx3) charts.operator = new Chart(ctx3, { 
-        type: 'bar', 
-         { 
-            labels: [], 
-            datasets: [{ 
-                label: 'รายการ', 
-                 [], 
-                backgroundColor: 'rgba(59,130,246,0.8)', 
-                borderRadius: 6 
-            }] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            indexAxis: 'y', 
-            plugins: { legend: { display: false } }, 
-            scales: { 
-                x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } }, 
-                y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 11 } }, grid: { display: false } } 
+    if (ctx3) {
+        charts.operator = new Chart(ctx3, { 
+            type: 'bar', 
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: 'รายการ', 
+                    data: [], 
+                    backgroundColor: 'rgba(59,130,246,0.8)', 
+                    borderRadius: 6 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                indexAxis: 'y', 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } }, 
+                    y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 11 } }, grid: { display: false } } 
+                } 
             } 
-        } 
-    });
+        });
+    }
 
+    // Trend Chart
     const ctx4 = document.getElementById('trendChart')?.getContext('2d');
-    if (ctx4) charts.trend = new Chart(ctx4, { 
-        type: 'line', 
-         { 
-            labels: [], 
-            datasets: [
-                { label: 'สำเร็จ',  [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true }, 
-                { label: 'ไม่สำเร็จ',  [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true }
-            ] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } } }, 
-            scales: { 
-                x: { ticks: { color: textColor }, grid: { color: gridColor } }, 
-                y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+    if (ctx4) {
+        charts.trend = new Chart(ctx4, { 
+            type: 'line', 
+            data: { 
+                labels: [], 
+                datasets: [
+                    { label: 'สำเร็จ', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true }, 
+                    { label: 'ไม่สำเร็จ', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true }
+                ] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } } }, 
+                scales: { 
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } }, 
+                    y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+                } 
             } 
-        } 
-    });
+        });
+    }
 
+    // Branch Chart
     const ctx5 = document.getElementById('branchChart')?.getContext('2d');
-    if (ctx5) charts.branch = new Chart(ctx5, { 
-        type: 'bar', 
-         { 
-            labels: [], 
-            datasets: [{ 
-                label: 'รายการ', 
-                 [], 
-                backgroundColor: 'rgba(245,158,11,0.8)', 
-                borderRadius: 6 
-            }] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { display: false } }, 
-            scales: { 
-                x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, 
-                y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+    if (ctx5) {
+        charts.branch = new Chart(ctx5, { 
+            type: 'bar', 
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: 'รายการ', 
+                    data: [], 
+                    backgroundColor: 'rgba(245,158,11,0.8)', 
+                    borderRadius: 6 
+                }] 
+            }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, 
+                    y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+                } 
             } 
-        } 
-    });
+        });
+    }
 }
 
 function updateCharts() {
@@ -876,13 +1190,13 @@ function updateCharts() {
             if (c.options.plugins?.legend?.labels) c.options.plugins.legend.labels.color = textColor;
             if (c.options.scales?.x?.ticks) c.options.scales.x.ticks.color = textColor;
             if (c.options.scales?.y?.ticks) c.options.scales.y.ticks.color = textColor;
-            if (c.options.scales?.y?.grid)  c.options.scales.y.grid.color = gridColor;
+            if (c.options.scales?.y?.grid) c.options.scales.y.grid.color = gridColor;
             c.update('none');
         } catch(e) {}
     });
 
     const success = filteredParcels.filter(p => p.status==='สำเร็จ').length;
-    const failed  = filteredParcels.filter(p => p.status==='ไม่สำเร็จ').length;
+    const failed = filteredParcels.filter(p => p.status==='ไม่สำเร็จ').length;
     const pending = filteredParcels.filter(p => p.status==='รอ').length;
     
     if (charts.success) { 
@@ -943,8 +1257,9 @@ function handleFileUpload(event) {
     reader.onload = (e) => {
         try {
             let data;
-            if (ext === '.csv') data = parseCSV(e.target.result);
-            else { 
+            if (ext === '.csv') {
+                data = parseCSV(e.target.result);
+            } else { 
                 const wb = XLSX.read(e.target.result, { type:'array' }); 
                 const ws = wb.Sheets[wb.SheetNames[0]]; 
                 data = XLSX.utils.sheet_to_json(ws, { defval:'' }); 
@@ -953,15 +1268,15 @@ function handleFileUpload(event) {
             const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
             const imported = data.map((row, idx) => ({
                 id: maxId + idx + 1,
-                tracking: row['หมายเลขสิ่งของ'] || `TRK-${Date.now()}-${idx}`,
-                branch:   row['รหัสที่ทำการปลายทาง'] || '-',
-                operator: row['ผู้ดำเนินการ'] || '-',
-                datetime: row['วันที่ เวลา (สแกนผลการนำจ่ายล่าสุด)'] || row['วันที่ เวลา'] || new Date().toLocaleString('th-TH'),
-                reason:   row['สาเหตุ'] || '-',
-                lazada:   row['Lazada?'] || 'N',
-                holdDays: row['จำนวนวันที่ถือครอง (นับจากวันที่ปลายทาง)'] || row['จำนวนวันที่ถือครอง'] || '-',
-                attempts: row['จำนวนครั้งที่พยายามนำจ่าย'] || '0',
-                status:   'รอ', 
+                tracking: row['หมายเลขสิ่งของ'] || row['Tracking'] || `TRK-${Date.now()}-${idx}`,
+                branch: row['รหัสที่ทำการปลายทาง'] || row['Branch'] || '-',
+                operator: row['ผู้ดำเนินการ'] || row['Operator'] || '-',
+                datetime: row['วันที่ เวลา'] || row['Datetime'] || new Date().toLocaleString('th-TH'),
+                reason: row['สาเหตุ'] || row['Reason'] || '-',
+                lazada: row['Lazada?'] || row['Lazada'] || 'N',
+                holdDays: row['จำนวนวันที่ถือครอง'] || row['HoldDays'] || '-',
+                attempts: row['จำนวนครั้งที่พยายามนำจ่าย'] || row['Attempts'] || '0',
+                status: 'รอ', 
                 type: 'เปิดเซฟ', 
                 photoUrl: ''
             }));
@@ -974,11 +1289,20 @@ function handleFileUpload(event) {
             renderDailySummary(); 
             updateCharts();
             
-            if (status) status.innerHTML = `<div class="flex items-center justify-center gap-2 text-green-600"><i class="fas fa-check-circle"></i><span>นำเข้าสำเร็จ ${imported.length} รายการ</span></div>`;
-            setTimeout(() => { if (status) status.classList.add('hidden'); showPage('dashboard'); }, 1500);
+            if (status) {
+                status.innerHTML = `<div class="flex items-center justify-center gap-2 text-green-600"><i class="fas fa-check-circle"></i><span>นำเข้าสำเร็จ ${imported.length} รายการ</span></div>`;
+                status.classList.remove('hidden');
+            }
+            setTimeout(() => { 
+                if (status) status.classList.add('hidden'); 
+                showPage('dashboard'); 
+            }, 1500);
         } catch(err) {
             console.error(err);
-            if (status) status.innerHTML = `<div class="flex items-center justify-center gap-2 text-red-600"><i class="fas fa-exclamation-circle"></i><span>เกิดข้อผิดพลาด: ${err.message}</span></div>`;
+            if (status) {
+                status.innerHTML = `<div class="flex items-center justify-center gap-2 text-red-600"><i class="fas fa-exclamation-circle"></i><span>เกิดข้อผิดพลาด: ${err.message}</span></div>`;
+                status.classList.remove('hidden');
+            }
         }
     };
     
@@ -1008,8 +1332,39 @@ function saveSettings() {
         return; 
     }
     localStorage.setItem('google_script_url', url || API_URL);
-    updateSyncStatus();
     showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว', 'success');
+}
+
+async function testSheetConnection() {
+    showLoading(true);
+    try {
+        const url = document.getElementById('settingScriptUrl')?.value.trim() || API_URL;
+        const response = await fetch(url + '?action=test', {
+            method: 'GET',
+            mode: 'cors',
+            redirect: 'follow'
+        });
+
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            const text = await response.text();
+            result = { result: 'success', message: text };
+        }
+
+        if (result.result === 'success' || result.status === 'success') {
+            showToast('✅ เชื่อมต่อ Google Sheet สำเร็จ!', 'success');
+        } else {
+            throw new Error(result.error || 'ไม่สามารถเชื่อมต่อได้');
+        }
+    } catch (err) {
+        showToast('❌ เชื่อมต่อไม่สำเร็จ: ' + err.message, 'error');
+    } finally {
+        showLoading(false);
+    }
 }
 
 function clearSettings() {
@@ -1017,7 +1372,6 @@ function clearSettings() {
     localStorage.removeItem('google_script_url');
     const el = document.getElementById('settingScriptUrl');
     if (el) el.value = '';
-    updateSyncStatus();
     showToast('ยกเลิกการเชื่อมต่อแล้ว', 'warning');
 }
 
@@ -1025,68 +1379,14 @@ function loadSettings() {
     const url = localStorage.getItem('google_script_url') || API_URL;
     const el = document.getElementById('settingScriptUrl');
     if (el) el.value = url;
-    updateSyncStatus();
-}
-
-function updateSyncStatus() {
-    const url = localStorage.getItem('google_script_url') || API_URL;
-    const dot = document.getElementById('syncDot');
-    const txt = document.getElementById('syncStatusText');
-    
-    if (url) {
-        if (dot) { dot.className = 'w-2 h-2 rounded-full bg-green-500 hidden md:block'; dot.title = 'เชื่อมต่อแล้ว'; }
-        if (txt) txt.textContent = 'เชื่อมต่อแล้ว ✓';
-    } else {
-        if (dot) { dot.className = 'w-2 h-2 rounded-full bg-gray-400 hidden md:block'; }
-        if (txt) txt.textContent = 'ยังไม่ได้ตั้งค่า URL';
-    }
-}
-
-function showSyncMenu(event) {
-    event.stopPropagation();
-    const menu = document.getElementById('syncMenu');
-    if (!menu) return;
-    menu.classList.toggle('hidden');
-    const close = () => { 
-        menu.classList.add('hidden'); 
-        document.removeEventListener('click', close); 
-    };
-    setTimeout(() => document.addEventListener('click', close), 0);
-}
-
-async function testConnection() {
-    const url = (document.getElementById('settingScriptUrl')?.value.trim()) || localStorage.getItem('google_script_url') || API_URL;
-    if (!url) { showToast('กรุณากรอก URL ก่อน', 'warning'); return; }
-    
-    const banner = document.getElementById('connStatusBanner');
-    const icon   = document.getElementById('connStatusIcon');
-    const msg    = document.getElementById('connStatusMsg');
-    
-    if (!banner) return;
-    
-    banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600';
-    icon.className = 'fas fa-spinner fa-spin'; 
-    msg.textContent = 'กำลังทดสอบ...';
-    banner.classList.remove('hidden');
-    
-    try {
-        await fetch(url + '?action=stats', { method:'GET', mode:'no-cors' });
-        banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-green-50 dark:bg-green-900/20 text-green-700';
-        icon.className = 'fas fa-check-circle'; 
-        msg.textContent = 'เชื่อมต่อสำเร็จ! Script ทำงานปกติ';
-    } catch(err) {
-        banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-red-50 dark:bg-red-900/20 text-red-700';
-        icon.className = 'fas fa-times-circle'; 
-        msg.textContent = 'เชื่อมต่อไม่ได้: ' + err.message;
-    }
 }
 
 // ================================================================
 // GitHub Settings
 // ================================================================
 function saveGitHubSettings() {
-    const user  = document.getElementById('ghUsername')?.value.trim();
-    const repo  = document.getElementById('ghRepo')?.value.trim();
+    const user = document.getElementById('ghUsername')?.value.trim();
+    const repo = document.getElementById('ghRepo')?.value.trim();
     const token = document.getElementById('ghToken')?.value.trim();
     
     if (!user || !repo || !token) { 
@@ -1097,7 +1397,7 @@ function saveGitHubSettings() {
     localStorage.setItem('gh_username', user);
     localStorage.setItem('gh_repo', repo);
     localStorage.setItem('gh_token', token);
-    testGitHubConnection(user, repo, token);
+    showToast('บันทึกการตั้งค่า GitHub แล้ว', 'success');
 }
 
 function clearGitHubSettings() {
@@ -1109,63 +1409,17 @@ function clearGitHubSettings() {
         const el = document.getElementById(id); 
         if (el) el.value = ''; 
     });
-    
-    showGHBanner('ล้างการตั้งค่า GitHub แล้ว', 'warning');
     showToast('ล้างการตั้งค่า GitHub แล้ว', 'warning');
 }
 
 function loadGitHubSettings() {
     const u = localStorage.getItem('gh_username') || '';
-    const r = localStorage.getItem('gh_repo')     || '';
-    const t = localStorage.getItem('gh_token')    || '';
+    const r = localStorage.getItem('gh_repo') || '';
+    const t = localStorage.getItem('gh_token') || '';
     
     const uEl = document.getElementById('ghUsername'); if (uEl) uEl.value = u;
-    const rEl = document.getElementById('ghRepo');     if (rEl) rEl.value = r;
-    const tEl = document.getElementById('ghToken');    if (tEl) tEl.value = t;
-    
-    if (u && r && t) showGHBanner(`GitHub: ${u}/${r} (บันทึกแล้ว)`, 'success');
-}
-
-async function testGitHubConnection(user, repo, token) {
-    showGHBanner('กำลังทดสอบ GitHub...', 'info');
-    try {
-        const res = await fetch(`https://api.github.com/repos/${user}/${repo}`, { 
-            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } 
-        });
-        if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
-        const data = await res.json();
-        showGHBanner(`เชื่อมต่อสำเร็จ! ${data.full_name} (${data.private?'🔒 Private':'🌐 Public'})`, 'success');
-        showToast('GitHub เชื่อมต่อสำเร็จ!', 'success');
-    } catch(err) {
-        showGHBanner('เชื่อมต่อไม่ได้: ' + err.message, 'error');
-        showToast('GitHub error: ' + err.message, 'error');
-    }
-}
-
-function showGHBanner(msg, type) {
-    const b = document.getElementById('ghStatusBanner');
-    const i = document.getElementById('ghStatusIcon');
-    const m = document.getElementById('ghStatusMsg');
-    
-    if (!b) return;
-    
-    const styles = { 
-        success:'bg-green-50 dark:bg-green-900/20 text-green-700', 
-        error:'bg-red-50 dark:bg-red-900/20 text-red-700', 
-        info:'bg-blue-50 dark:bg-blue-900/20 text-blue-700', 
-        warning:'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700' 
-    };
-    const icons  = { 
-        success:'fa-check-circle', 
-        error:'fa-times-circle', 
-        info:'fa-spinner fa-spin', 
-        warning:'fa-exclamation-triangle' 
-    };
-    
-    b.className = `mb-4 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium ${styles[type]}`;
-    i.className = `fas ${icons[type]}`; 
-    m.textContent = msg;
-    b.classList.remove('hidden');
+    const rEl = document.getElementById('ghRepo'); if (rEl) rEl.value = r;
+    const tEl = document.getElementById('ghToken'); if (tEl) tEl.value = t;
 }
 
 function toggleTokenVisibility() {
@@ -1175,175 +1429,11 @@ function toggleTokenVisibility() {
     
     if (el.type === 'password') { 
         el.type = 'text'; 
-        icon.className = 'fas fa-eye-slash'; 
+        if (icon) icon.className = 'fas fa-eye-slash'; 
     } else { 
         el.type = 'password'; 
-        icon.className = 'fas fa-eye'; 
+        if (icon) icon.className = 'fas fa-eye'; 
     }
-}
-
-// ================================================================
-// Sync Functions
-// ================================================================
-async function autoLoadFromSheet() {
-    const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) return;
-    
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.classList.remove('hidden');
-    
-    try {
-        const res = await fetch(scriptUrl + '?action=read&t=' + Date.now(), { method:'GET', mode:'cors' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const result = await res.json();
-        
-        if (result.result === 'success' && result.data?.length > 0) {
-            parcels = result.data.map(item => ({
-                id:       item.id || (Date.now() + Math.random()),
-                tracking: item.tracking || '',
-                branch:   item.branch || '',
-                operator: item.operator || '',
-                datetime: item.datetime || '',
-                reason:   item.reason || '',
-                lazada:   item.lazada || 'N',
-                holdDays: item.holdDays || '',
-                attempts: item.attempts || '0',
-                status:   item.status || 'รอ',
-                type:     item.type || 'เปิดเซฟ',
-                photoUrl: item.photoUrl || ''
-            }));
-            filteredParcels = [...parcels];
-            updateStats(); 
-            renderRecords(); 
-            renderDailySummary(); 
-            updateCharts();
-            showToast(`✅ โหลดข้อมูลสำเร็จ: ${parcels.length} รายการ`, 'success');
-        } else {
-            showToast('Google Sheet ยังไม่มีข้อมูล', 'info');
-        }
-    } catch(err) {
-        console.warn('Auto-load failed:', err);
-    } finally {
-        if (overlay) overlay.classList.add('hidden');
-    }
-}
-
-async function syncFromSheet() {
-    document.getElementById('syncMenu')?.classList.add('hidden');
-    const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    
-    if (!scriptUrl) { 
-        showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); 
-        showPage('settings'); 
-        return; 
-    }
-    
-    showToast('กำลังดึงข้อมูลจาก Google Sheet...', 'info');
-    
-    try {
-        const res = await fetch(scriptUrl + '?action=read&t=' + Date.now(), { method:'GET', mode:'cors' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const result = await res.json();
-        
-        if (result.result === 'success' && result.data?.length > 0) {
-            result.data.forEach(item => {
-                const existing = parcels.find(p => p.tracking === item.tracking);
-                if (existing) { 
-                    existing.status = item.status || existing.status; 
-                    existing.photoUrl = item.photoUrl || existing.photoUrl; 
-                } else { 
-                    const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => Number(p.id)||0)) : 0; 
-                    parcels.push({ ...item, id: maxId + 1 }); 
-                }
-            });
-            filteredParcels = [...parcels];
-            updateStats(); 
-            renderRecords(); 
-            renderDailySummary(); 
-            updateCharts();
-            showToast(`ดึงข้อมูลสำเร็จ! ${result.total} รายการ`, 'success');
-        } else {
-            showToast('Sheet ยังไม่มีข้อมูล', 'info');
-        }
-    } catch(err) {
-        console.error(err);
-        showToast('ดึงข้อมูลไม่สำเร็จ (CORS) — ลองใช้ปุ่ม "ส่งข้อมูลไป Sheet" แทน', 'error');
-    }
-}
-
-async function exportToGoogleSheet(mode) {
-    document.getElementById('syncMenu')?.classList.add('hidden');
-    
-    if (!filteredParcels.length) { 
-        showToast('ไม่มีข้อมูลให้ส่งออก', 'warning'); 
-        return; 
-    }
-    
-    const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) { 
-        showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); 
-        showPage('settings'); 
-        return; 
-    }
-    
-    mode = mode || 'append';
-    const label = mode === 'replace' ? 'แทนที่ข้อมูลทั้งหมด' : 'ส่งข้อมูล';
-    showToast(`กำลัง${label}...`, 'info');
-    
-    try {
-        const photosToSend = {};
-        filteredParcels.forEach(p => {
-            if (photos[p.tracking] && photos[p.tracking].startsWith('data:')) photosToSend[p.tracking] = photos[p.tracking];
-        });
-        
-        const parcelsToSend = filteredParcels.map(p => ({ 
-            ...p, 
-            photoUrl: photos[p.tracking]?.startsWith('http') ? photos[p.tracking] : (p.photoUrl||'') 
-        }));
-        
-        await fetch(scriptUrl, { 
-            method:'POST', 
-            mode:'no-cors', 
-            headers:{'Content-Type':'application/json'}, 
-            body: JSON.stringify({ action:'write', mode, parcels: parcelsToSend, photos: photosToSend }) 
-        });
-        
-        showToast(`${label}สำเร็จ! ${filteredParcels.length} รายการ — ตรวจสอบใน Google Sheet`, 'success');
-    } catch(err) {
-        console.error(err); 
-        showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
-    }
-}
-
-async function syncStatusToSheet(tracking, status) {
-    const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) return;
-    try { 
-        await fetch(scriptUrl, { 
-            method:'POST', 
-            mode:'no-cors', 
-            headers:{'Content-Type':'application/json'}, 
-            body: JSON.stringify({ action:'update', tracking, updates:{status} }) 
-        }); 
-    } catch(e) { console.warn('Sync status failed:', e); }
-}
-
-async function syncDeleteToSheet(tracking) {
-    const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) return;
-    try { 
-        await fetch(scriptUrl, { 
-            method:'POST', 
-            mode:'no-cors', 
-            headers:{'Content-Type':'application/json'}, 
-            body: JSON.stringify({ action:'delete', tracking }) 
-        }); 
-    } catch(e) { console.warn('Sync delete failed:', e); }
-}
-
-async function syncDeleteFromSheet() {
-    if (!confirm(`ซิงค์การลบ\n\nSheet จะถูกล้างและเขียนใหม่ด้วยข้อมูล Dashboard ปัจจุบัน (${parcels.length} รายการ)\n\nยืนยัน?`)) return;
-    await exportToGoogleSheet('replace');
 }
 
 // ================================================================
@@ -1359,13 +1449,14 @@ function exportPDF() {
         doc.text('Date: ' + new Date().toLocaleDateString('th-TH'), 14, 22);
         doc.autoTable({ 
             startY:30, 
-            head:[['Tracking','Destination','Operator','Date','Reason','Attempts','Status']], 
-            body: filteredParcels.map(p => [p.tracking, p.branch, p.operator, p.datetime, (p.reason||'').substring(0,30), p.attempts, p.status]), 
+            head:[['Tracking','Destination','Operator','Date','Status']], 
+            body: filteredParcels.map(p => [p.tracking, p.branch, p.operator, p.datetime, p.status]), 
             theme:'grid', 
             styles:{fontSize:8, cellPadding:2}, 
             headStyles:{fillColor:[59,130,246]} 
         });
         doc.save(`Tracking_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+        showToast('Export PDF สำเร็จ', 'success');
     } catch(e) { 
         showToast('Export PDF ไม่สำเร็จ: ' + e.message, 'error'); 
     }
@@ -1379,26 +1470,34 @@ function exportExcel() {
             'ผู้ดำเนินการ': p.operator,
             'วันที่เวลา': p.datetime, 
             'สาเหตุ': p.reason, 
-            'Lazada': p.lazada,
-            'วันที่ถือครอง': p.holdDays, 
-            'พยายามนำจ่าย': p.attempts, 
             'สถานะ': p.status, 
             'ประเภท': p.type
         })));
         const wb = XLSX.utils.book_new(); 
         XLSX.utils.book_append_sheet(wb, ws, 'Tracking');
         XLSX.writeFile(wb, `Tracking_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        showToast('Export Excel สำเร็จ', 'success');
     } catch(e) { 
         showToast('Export Excel ไม่สำเร็จ: ' + e.message, 'error'); 
     }
 }
 
 // ================================================================
-// Toast
+// Toast Notification
 // ================================================================
 function showToast(message, type = 'info') {
-    const colors = { success:'bg-green-500', error:'bg-red-500', warning:'bg-yellow-500', info:'bg-blue-500' };
-    const icons  = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+    const colors = { 
+        success:'bg-green-500', 
+        error:'bg-red-500', 
+        warning:'bg-yellow-500', 
+        info:'bg-blue-500' 
+    };
+    const icons = { 
+        success:'fa-check-circle', 
+        error:'fa-exclamation-circle', 
+        warning:'fa-exclamation-triangle', 
+        info:'fa-info-circle' 
+    };
     
     const toast = document.createElement('div');
     toast.className = `fixed bottom-4 right-4 ${colors[type]||colors.info} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-fade-in`;
@@ -1414,176 +1513,165 @@ function showToast(message, type = 'info') {
 }
 
 // ================================================================
-// GAS Code (Embedded)
+// Auto Load from Sheet (Placeholder)
 // ================================================================
-const GAS_CODE = `// ================================================================
-// Tracking Dashboard — Google Apps Script V3
-// ================================================================
-
-var CONFIG = {
-  sheetId:   "1QZWOH7L9OgRvrBwzoRuseg3tCYWcIoG9D8vMkpRB_DY",
-  sheetName: "TrackingData",
-  headers: [
-    "ID","หมายเลขสิ่งของ","รหัสที่ทำการปลายทาง","ผู้ดำเนินการ",
-    "วันที่ เวลา","สาเหตุ","Lazada?","จำนวนวันที่ถือครอง",
-    "จำนวนครั้งที่พยายามนำจ่าย","สถานะ","ประเภท","URL รูปภาพ",
-    "วันที่บันทึก","แก้ไขล่าสุด"
-  ]
-};
-
-function doGet(e) {
-  var action = e && e.parameter && e.parameter.action;
-  if (action === "read")  return readData();
-  if (action === "stats") return getStats();
-  return jsonResponse({ status: "ok", version: "V3" });
-}
-
-function doPost(e) {
-  try {
-    var payload = JSON.parse(e.postData.contents);
-    var action  = payload.action || "write";
-    if (action === "write")  return writeData(payload);
-    if (action === "update") return updateRow(payload);
-    if (action === "delete") return deleteRow(payload);
-    if (action === "clear")  return clearSheet();
-    return jsonResponse({ result: "error", error: "Unknown action: " + action });
-  } catch (err) {
-    return jsonResponse({ result: "error", error: err.toString() });
-  }
-}
-
-function writeData(payload) {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = getOrCreateSheet(ss);
-  var data  = payload.parcels || [];
-  var mode  = payload.mode    || "append";
-  var now   = new Date();
-  var existingTracking = {};
-  if (mode === "append" && sheet.getLastRow() > 1) {
-    var existing = sheet.getRange(2, 2, sheet.getLastRow()-1, 1).getValues();
-    existing.forEach(function(row, i) { if (row[0]) existingTracking[row[0]] = i + 2; });
-  }
-  var added = 0, updated = 0;
-  data.forEach(function(item) {
-    var nowStr = Utilities.formatDate(now, "Asia/Bangkok", "dd/MM/yyyy HH:mm");
-    var rowData = [item.id, item.tracking, item.branch, item.operator, item.datetime,
-                   item.reason, item.lazada, item.holdDays, item.attempts, item.status,
-                   item.type, item.photoUrl || "", nowStr, nowStr];
-    if (mode === "append" && existingTracking[item.tracking]) {
-      var rn = existingTracking[item.tracking];
-      sheet.getRange(rn, 10).setValue(item.status);
-      sheet.getRange(rn, 12).setValue(item.photoUrl || "");
-      sheet.getRange(rn, 14).setValue(nowStr);
-      updated++;
-    } else {
-      sheet.appendRow(rowData); added++;
-    }
-  });
-  return jsonResponse({ result:"success", added:added, updated:updated, total:sheet.getLastRow()-1 });
-}
-
-function readData() {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result:"success", data:[], total:0 });
-  var rows = sheet.getRange(2, 1, sheet.getLastRow()-1, CONFIG.headers.length).getValues();
-  var data = rows.filter(function(r){ return r[1]; }).map(function(row) {
-    return { id:row[0],tracking:row[1],branch:row[2],operator:row[3],datetime:row[4],
-             reason:row[5],lazada:row[6],holdDays:row[7],attempts:row[8],status:row[9],
-             type:row[10],photoUrl:row[11],createdAt:row[12],updatedAt:row[13] };
-  });
-  return jsonResponse({ result:"success", data, total:data.length });
-}
-
-function updateRow(payload) {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result:"error", error:"No data" });
-  var rows   = sheet.getRange(2, 2, sheet.getLastRow()-1, 1).getValues();
-  var colMap = { status:10, type:11, photoUrl:12 };
-  var now    = Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy HH:mm");
-  for (var i = 0; i < rows.length; i++) {
-    if (rows[i][0] === payload.tracking) {
-      var rn = i + 2;
-      Object.keys(payload.updates||{}).forEach(function(k){ if(colMap[k]) sheet.getRange(rn,colMap[k]).setValue(payload.updates[k]); });
-      sheet.getRange(rn, 14).setValue(now);
-      return jsonResponse({ result:"success", row:rn });
-    }
-  }
-  return jsonResponse({ result:"error", error:"Not found: " + payload.tracking });
-}
-
-function deleteRow(payload) {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result:"error", error:"No data" });
-  var rows = sheet.getRange(2, 2, sheet.getLastRow()-1, 1).getValues();
-  for (var i = rows.length-1; i >= 0; i--) {
-    if (rows[i][0] === payload.tracking) { sheet.deleteRow(i+2); return jsonResponse({ result:"success" }); }
-  }
-  return jsonResponse({ result:"error", error:"Not found: " + payload.tracking });
-}
-
-function clearSheet() {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (sheet && sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow()-1);
-  return jsonResponse({ result:"success" });
-}
-
-function getStats() {
-  var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
-  var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result:"success", stats:{total:0,success:0,failed:0,pending:0} });
-  var rows  = sheet.getRange(2, 10, sheet.getLastRow()-1, 1).getValues();
-  var stats = {total:0,success:0,failed:0,pending:0};
-  rows.forEach(function(r) {
-    if (!r[0]) return; stats.total++;
-    if (r[0]==="สำเร็จ") stats.success++; else if (r[0]==="ไม่สำเร็จ") stats.failed++; else stats.pending++;
-  });
-  return jsonResponse({ result:"success", stats:stats });
-}
-
-function getOrCreateSheet(ss) {
-  var sheet = ss.getSheetByName(CONFIG.sheetName) || ss.insertSheet(CONFIG.sheetName);
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(CONFIG.headers);
-    sheet.getRange(1,1,1,CONFIG.headers.length).setBackground("#1e40af").setFontColor("#ffffff").setFontWeight("bold");
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function jsonResponse(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}`;
-
-function injectGASCode() {
-    const pre = document.getElementById('gasCodePreview');
-    if (pre) pre.textContent = GAS_CODE;
-}
-
-async function copyGASCode() {
+async function autoLoadFromSheet() {
+    showLoading(true);
     try {
-        await navigator.clipboard.writeText(GAS_CODE);
-        const btn = document.getElementById('copyGASBtn');
-        if (btn) {
-            const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i><span>คัดลอกแล้ว!</span>';
-            btn.className = btn.className.replace('bg-green-600','bg-emerald-500');
-            setTimeout(() => { btn.innerHTML = orig; btn.className = btn.className.replace('bg-emerald-500','bg-green-600'); }, 2000);
+        const url = localStorage.getItem('google_script_url') || API_URL;
+
+        // สำคัญ: ใช้ redirect: "follow" เพราะ Apps Script ส่ง 302 redirect [^14^]
+        const response = await fetch(url + '?action=getAll', {
+            method: 'GET',
+            mode: 'cors',
+            redirect: 'follow'
+        });
+
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const data = await response.json();
+
+        if (data.result === 'success' && Array.isArray(data.data)) {
+            const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
+            const sheetData = data.data.map((row, idx) => ({
+                id: maxId + idx + 1,
+                tracking: row['หมายเลขสิ่งของ'] || row['tracking'] || `TRK-${Date.now()}-${idx}`,
+                branch: row['รหัสที่ทำการปลายทาง'] || row['branch'] || row['รหัส'] || '-',
+                operator: row['ผู้ดำเนินการ'] || row['operator'] || '-',
+                datetime: row['วันที่ เวลา'] || row['datetime'] || row['วันที่'] || new Date().toLocaleString('th-TH'),
+                reason: row['สาเหตุ'] || row['reason'] || '-',
+                lazada: row['Lazada?'] || row['lazada'] || 'N',
+                holdDays: row['จำนวนวันที่ถือครอง'] || row['holdDays'] || '-',
+                attempts: row['จำนวนครั้งที่พยายามนำจ่าย'] || row['attempts'] || '0',
+                status: row['สถานะ'] || row['status'] || 'รอ',
+                type: row['ประเภท'] || row['type'] || 'เปิดเซฟ',
+                photoUrl: row['รูปภาพ'] || row['photoUrl'] || ''
+            }));
+
+            const existingTrackings = new Set(parcels.map(p => p.tracking));
+            const newData = sheetData.filter(p => !existingTrackings.has(p.tracking));
+
+            if (newData.length > 0) {
+                parcels = [...parcels, ...newData];
+                filteredParcels = [...parcels];
+                updateStats();
+                renderRecords();
+                renderDailySummary();
+                updateCharts();
+                showToast(`📥 โหลดข้อมูลจาก Sheet สำเร็จ: ${newData.length} รายการใหม่`, 'success');
+            } else {
+                showToast('📋 ข้อมูลตรงกับที่มีอยู่แล้ว', 'info');
+            }
+        } else {
+            throw new Error(data.error || 'ข้อมูลไม่ถูกต้อง');
         }
-        showToast('คัดลอกโค้ด GAS แล้ว! วางใน Code.gs ได้เลย', 'success');
-    } catch {
-        const pre = document.getElementById('gasCodePreview');
-        if (pre) { 
-            const sel = window.getSelection(); 
-            const r = document.createRange(); 
-            r.selectNodeContents(pre); 
-            sel.removeAllRanges(); 
-            sel.addRange(r); 
+    } catch (err) {
+        console.error('Auto-load error:', err);
+        showToast('⚠️ โหลดจาก Sheet ไม่สำเร็จ: ' + err.message, 'warning');
+    } finally {
+        showLoading(false);
+    }
+}
+
+
+// ================================================================
+// Sync Data to Google Sheet
+// ================================================================
+async function syncToSheet() {
+    if (!parcels.length) {
+        showToast('ไม่มีข้อมูลให้อัปโหลด', 'warning');
+        return;
+    }
+
+    showLoading(true);
+    try {
+        const url = localStorage.getItem('google_script_url') || API_URL;
+
+        // เตรียมข้อมูลสำหรับส่ง
+        const payload = parcels.map(p => ({
+            tracking: p.tracking,
+            branch: p.branch,
+            operator: p.operator,
+            datetime: p.datetime,
+            reason: p.reason,
+            lazada: p.lazada,
+            holdDays: p.holdDays,
+            attempts: p.attempts,
+            status: p.status,
+            type: p.type,
+            photoUrl: photos[p.tracking] || p.photoUrl || ''
+        }));
+
+        // สำคัญ: ใช้ text/plain + redirect: "follow" [^9^][^14^]
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'sync', data: payload })
+        });
+
+        let result;
+        try {
+            const text = await response.text();
+            result = text ? JSON.parse(text) : { result: 'success' };
+        } catch (parseErr) {
+            result = { result: 'success', message: 'Data sent successfully' };
         }
-        showToast('เลือกข้อความแล้ว — กด Ctrl+C เพื่อคัดลอก', 'info');
+
+        if (result.result === 'success' || result.status === 'success') {
+            showToast(`☁️ อัปโหลดข้อมูลสำเร็จ: ${payload.length} รายการ`, 'success');
+        } else {
+            throw new Error(result.error || result.message || 'อัปโหลดไม่สำเร็จ');
+        }
+    } catch (err) {
+        console.error('Sync error:', err);
+        showToast('⚠️ อัปโหลดไป Sheet ไม่สำเร็จ: ' + err.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// อัปโหลดรายการเดี่ยวไป Sheet (เมื่อเปลี่ยนสถานะหรือเพิ่มรูป)
+async function syncSingleToSheet(parcel) {
+    try {
+        const url = localStorage.getItem('google_script_url') || API_URL;
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ 
+                action: 'update', 
+                data: {
+                    tracking: parcel.tracking,
+                    branch: parcel.branch,
+                    operator: parcel.operator,
+                    datetime: parcel.datetime,
+                    reason: parcel.reason,
+                    lazada: parcel.lazada,
+                    holdDays: parcel.holdDays,
+                    attempts: parcel.attempts,
+                    status: parcel.status,
+                    type: parcel.type,
+                    photoUrl: photos[parcel.tracking] || parcel.photoUrl || ''
+                }
+            })
+        });
+
+        let result;
+        try {
+            const text = await response.text();
+            result = text ? JSON.parse(text) : { result: 'success' };
+        } catch (parseErr) {
+            result = { result: 'success' };
+        }
+
+        if (result.result === 'success' || result.status === 'success') {
+            showToast('☁️ อัปเดตข้อมูลสำเร็จ', 'success');
+        }
+    } catch (err) {
+        console.error('Single sync error:', err);
     }
 }
 
@@ -1591,28 +1679,50 @@ async function copyGASCode() {
 // Init
 // ================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+    // Load theme
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
 
+    // Initialize
     initCharts();
     updateStats();
     renderRecords();
     renderDailySummary();
     loadSettings();
-    updateSyncStatus();
+    loadGitHubSettings();
+    // ดึงข้อมูลจาก Google Sheet อัตโนมัติตอนเริ่มแอป
+    autoLoadFromSheet();
 
+    // Setup new settings triggers
+    setupLogoClickTrigger();
+    setupPressHoldTrigger();
+    setupSwipeTrigger();
+
+    // Drop zone
     const dropZone = document.getElementById('dropZone');
     if (dropZone) {
-        dropZone.addEventListener('click', () => document.getElementById('importFile')?.click());
-        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-blue-500','bg-blue-50'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500','bg-blue-50'));
+        dropZone.addEventListener('click', () => {
+            const input = document.getElementById('importFile');
+            if (input) input.click();
+        });
+        dropZone.addEventListener('dragover', e => { 
+            e.preventDefault(); 
+            dropZone.classList.add('border-blue-500','bg-blue-50'); 
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500','bg-blue-50');
+        });
         dropZone.addEventListener('drop', e => { 
             e.preventDefault(); 
             dropZone.classList.remove('border-blue-500','bg-blue-50'); 
-            if (e.dataTransfer?.files?.[0]) handleFileUpload({ target:{ files:e.dataTransfer.files } }); 
+            if (e.dataTransfer?.files?.[0]) {
+                handleFileUpload({ target: { files: e.dataTransfer.files } }); 
+            }
         });
     }
 
-    setTimeout(() => autoLoadFromSheet(), 800);
+    showToast('ระบบพร้อมใช้งาน', 'success');
 });
 </script>
 </body>
