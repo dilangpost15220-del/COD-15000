@@ -487,7 +487,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Web App URL</label>
                                     <div class="flex gap-2">
-                                        <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec"
+                                        <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" value="https://script.google.com/macros/s/AKfycbyHPqUwJyOk3Xk3VEKbi6rF1vquJLedB97FYNaYmlRVq6zF7gNVxh_MwkX4-vEQcf-9QQ/exec"
                                             class="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
                                         <button onclick="testConnection()" class="px-4 py-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 rounded-xl font-medium transition flex items-center gap-2 text-sm">
                                             <i class="fas fa-vial"></i><span class="hidden md:inline">ทดสอบ</span>
@@ -585,7 +585,7 @@
                             <ol class="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-5">
                                 <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">1</span><span>เปิด <a href="https://script.google.com" target="_blank" class="text-blue-500 hover:underline">script.google.com</a> → New Project</span></li>
                                 <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">2</span><span>กด <strong>คัดลอกโค้ด</strong> ด้านบน → ลบโค้ดเก่าใน Code.gs แล้ววาง</span></li>
-                                <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">3</span><span>แก้ <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">sheetId</code> และ <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">folderId</code> ในโค้ด (บรรทัด 13-14)</span></li>
+                                <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">3</span><span>แก้ <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">sheetId</code> ในโค้ด (บรรทัด 13)</span></li>
                                 <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">4</span><span>Deploy → New Deployment → Web App → Execute as: <strong>Me</strong> → Access: <strong>Anyone</strong></span></li>
                                 <li class="flex gap-3 items-start"><span class="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">5</span><span>คัดลอก Web App URL ไปวางในช่อง ① ด้านบน</span></li>
                             </ol>
@@ -650,6 +650,9 @@
         let filteredParcels = [];
         let photos = {};
         let charts = {};
+        
+        // API URL ที่กำหนด
+        const API_URL = "https://script.google.com/macros/s/AKfycbwStB4SU18_QqSZt5kvCF2VWD9bh0Fdf4RI_VJsl_xZgTUOzp-EQ2q4MDWXY3unUXJo/exec";
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -724,7 +727,7 @@
             updateCharts();
         }
 
-        // File Upload - FIX: accumulate data instead of replacing
+        // File Upload
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -751,7 +754,6 @@
                         data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
                     }
 
-                    // FIX: Get max id to avoid duplicates
                     const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
 
                     const imported = data.map((row, idx) => ({
@@ -768,7 +770,6 @@
                         type: 'เปิดเซฟ'
                     }));
 
-                    // FIX: Merge with existing data instead of replacing
                     parcels = [...parcels, ...imported];
                     filteredParcels = [...parcels];
 
@@ -841,7 +842,7 @@
         }
 
         function loadSettings() {
-            const savedUrl = localStorage.getItem('google_script_url') || '';
+            const savedUrl = localStorage.getItem('google_script_url') || API_URL;
             const input = document.getElementById('settingScriptUrl');
             if (input) input.value = savedUrl;
             updateSyncStatus();
@@ -849,7 +850,7 @@
         }
 
         function updateSyncStatus() {
-            const url = localStorage.getItem('google_script_url');
+            const url = localStorage.getItem('google_script_url') || API_URL;
             const dot = document.getElementById('syncDot');
             const statusText = document.getElementById('syncStatusText');
 
@@ -866,13 +867,12 @@
             event.stopPropagation();
             const menu = document.getElementById('syncMenu');
             menu.classList.toggle('hidden');
-            // Close on click outside
             const close = (e) => { menu.classList.add('hidden'); document.removeEventListener('click', close); };
             setTimeout(() => document.addEventListener('click', close), 0);
         }
 
         async function testConnection() {
-            const url = document.getElementById('settingScriptUrl').value.trim();
+            const url = document.getElementById('settingScriptUrl').value.trim() || API_URL;
             if (!url) { showToast('กรุณากรอก URL ก่อน', 'warning'); return; }
 
             const banner = document.getElementById('connStatusBanner');
@@ -886,7 +886,6 @@
 
             try {
                 const response = await fetch(url + '?action=stats', { method: 'GET', mode: 'no-cors' });
-                // no-cors always succeeds if server is reachable
                 banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400';
                 icon.className = 'fas fa-check-circle';
                 msg.textContent = 'เชื่อมต่อสำเร็จ! Script ทำงานปกติ';
@@ -898,11 +897,11 @@
         }
 
         // ============================================================
-        // SYNC FROM SHEET - ดึงข้อมูลจาก Google Sheet มาแสดงใน Dashboard
+        // SYNC FROM SHEET
         // ============================================================
         async function syncFromSheet() {
             document.getElementById('syncMenu')?.classList.add('hidden');
-            const scriptUrl = localStorage.getItem('google_script_url');
+            const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
             if (!scriptUrl) {
                 showToast('กรุณาตั้งค่า Google Apps Script URL ก่อน', 'warning');
                 showPage('settings');
@@ -912,10 +911,6 @@
             showToast('กำลังดึงข้อมูลจาก Google Sheet...', 'info');
 
             try {
-                // Use a JSONP-like approach via fetch with CORS proxy won't work for GAS
-                // Instead use iframe trick or tell user to use the direct fetch
-                // GAS supports CORS when you set proper headers - but no-cors blocks reading
-                // We fetch with cors mode (requires GAS to set CORS headers)
                 const response = await fetch(scriptUrl + '?action=read', {
                     method: 'GET',
                     mode: 'cors'
@@ -927,17 +922,14 @@
                 if (result.result !== 'success') throw new Error(result.error || 'Unknown error');
 
                 if (result.data && result.data.length > 0) {
-                    // Merge: ข้อมูลจาก Sheet เป็น source of truth
                     const sheetTrackings = new Set(result.data.map(d => d.tracking));
 
-                    // อัปเดตรายการที่มีอยู่แล้ว
                     result.data.forEach(sheetRow => {
                         const existing = parcels.find(p => p.tracking === sheetRow.tracking);
                         if (existing) {
                             existing.status  = sheetRow.status  || existing.status;
                             existing.type    = sheetRow.type    || existing.type;
                         } else {
-                            // เพิ่มรายการใหม่จาก Sheet
                             const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
                             parcels.push({ ...sheetRow, id: maxId + 1 });
                         }
@@ -954,7 +946,6 @@
                 }
             } catch (err) {
                 console.error(err);
-                // GAS no-cors limitation: ถ้า fetch cors ไม่ได้ แนะนำวิธีอื่น
                 showToast('ไม่สามารถดึงข้อมูลได้ (CORS): ลองส่งข้อมูลจาก Dashboard ไป Sheet แทน', 'error');
             }
         }
@@ -1010,7 +1001,6 @@
             const container = document.getElementById('dailySummaryContainer');
             if (!container) return;
 
-            // Group by branch and date
             const summary = {};
 
             filteredParcels.forEach(p => {
@@ -1041,7 +1031,6 @@
                 if (photos[p.tracking]) summary[key].withPhoto++;
             });
 
-            // Sort by date (newest first) then branch
             const sortedKeys = Object.keys(summary).sort((a, b) => {
                 const [, dateA] = a.split('|');
                 const [, dateB] = b.split('|');
@@ -1063,7 +1052,6 @@
                 const successRate = s.total > 0 ? Math.round((s.success / s.total) * 100) : 0;
                 const displayDate = s.date ? formatDateForDisplay(s.date) : 'ไม่ระบุวันที่';
 
-                // Color based on success rate
                 let rateColor = 'text-red-600';
                 let rateBg = 'bg-red-100 dark:bg-red-900/30';
                 if (successRate >= 80) {
@@ -1115,7 +1103,6 @@
                             ${s.withPhoto > 0 ? `<span class="text-blue-500"><i class="fas fa-camera mr-1"></i>${s.withPhoto} รูป</span>` : ''}
                         </div>
 
-                        <!-- Mini progress bar -->
                         <div class="mt-3 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div class="h-full bg-green-500 rounded-full" style="width: ${successRate}%"></div>
                         </div>
@@ -1123,7 +1110,6 @@
                 `;
             }).join('');
 
-            // Update last updated time
             const now = new Date();
             document.getElementById('lastUpdated').textContent = 
                 `อัปเดตล่าสุด: ${now.toLocaleTimeString('th-TH')}`;
@@ -1162,7 +1148,7 @@
                     <td class="px-6 py-4 text-center">
                         ${(photos[p.tracking] || p.photoUrl)
                             ? `<a href="${photos[p.tracking] || p.photoUrl}" target="_blank" title="เปิดรูปภาพ">
-                                <img src="${photos[p.tracking] || p.photoUrl}" class="photo-thumbnail mx-auto" onclick="openPhoto('${p.tracking}', ${JSON.stringify(photos[p.tracking] || p.photoUrl || '')})" onerror="this.style.display='none'">
+                                <img src="${photos[p.tracking] || p.photoUrl}" class="photo-thumbnail mx-auto" onclick="openPhoto('${p.tracking}', '${photos[p.tracking] || p.photoUrl || ''}')" onerror="this.style.display='none'">
                                </a>`
                             : `<label class="cursor-pointer text-gray-400 hover:text-blue-500 transition inline-block">
                                 <i class="fas fa-camera text-xl"></i>
@@ -1224,7 +1210,6 @@
                 updateStats();
                 renderDailySummary();
                 updateCharts();
-                // Auto-sync สถานะไปที่ Sheet (background, ไม่รบกวน UI)
                 syncStatusToSheet(p.tracking, newStatus);
             }
         }
@@ -1232,46 +1217,14 @@
         // ============================================================
         // PHOTO FUNCTIONS — GitHub API (แทน Google Drive)
         // ============================================================
-        function uploadPhoto(input, tracking) {
-            if (!input.files?.[0]) return;
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const dataUrl = e.target.result;
-
-                // เช็คว่ามี GitHub config ไหม
-                const ghUser  = localStorage.getItem('gh_username');
-                const ghRepo  = localStorage.getItem('gh_repo');
-                const ghToken = localStorage.getItem('gh_token');
-
-                if (ghUser && ghRepo && ghToken) {
-                    // อัปโหลดไป GitHub
-                    const uploadedUrl = await uploadPhotoToGitHub(dataUrl, tracking, ghUser, ghRepo, ghToken);
-                    if (uploadedUrl) {
-                        photos[tracking] = uploadedUrl; // เก็บ URL จริงจาก GitHub
-                    } else {
-                        photos[tracking] = dataUrl; // fallback เก็บ local ถ้า upload ไม่ได้
-                    }
-                } else {
-                    // ไม่มี GitHub config — เก็บใน memory (local preview เท่านั้น)
-                    photos[tracking] = dataUrl;
-                    showToast('รูปภาพถูกเก็บชั่วคราว (ตั้งค่า GitHub เพื่อเก็บถาวร)', 'warning');
-                }
-
-                updateStats();
-                renderRecords();
-                renderDailySummary();
-            };
-            reader.readAsDataURL(file);
-        }
-
         async function uploadPhotoToGitHub(dataUrl, tracking, user, repo, token) {
             try {
                 showToast(`กำลังอัปโหลดรูป ${tracking}...`, 'info');
 
                 const base64Content = dataUrl.split(',')[1];
-                const ext = dataUrl.split(';')[0].split('/')[1] || 'jpg';
-                const filename = `photos/${tracking}_${Date.now()}.${ext}`;
+                const mimeType = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                const ext = mimeType.split('/')[1] || 'jpg';
+                const filename = `tracking-photos/${tracking}_${Date.now()}.${ext}`;
                 const apiUrl = `https://api.github.com/repos/${user}/${repo}/contents/${filename}`;
 
                 const response = await fetch(apiUrl, {
@@ -1282,8 +1235,9 @@
                         'Accept': 'application/vnd.github+json'
                     },
                     body: JSON.stringify({
-                        message: `Add photo for ${tracking}`,
-                        content: base64Content
+                        message: `Upload photo for tracking ${tracking}`,
+                        content: base64Content,
+                        branch: "main"
                     })
                 });
 
@@ -1293,8 +1247,8 @@
                 }
 
                 const result = await response.json();
-                // ใช้ raw URL เพื่อแสดงรูปใน <img>
-                const rawUrl = result.content.download_url;
+                const rawUrl = `https://raw.githubusercontent.com/${user}/${repo}/main/${filename}`;
+                
                 showToast(`อัปโหลดรูปสำเร็จ ✓`, 'success');
                 return rawUrl;
 
@@ -1303,6 +1257,36 @@
                 showToast(`อัปโหลดรูปไม่สำเร็จ: ${err.message}`, 'error');
                 return null;
             }
+        }
+
+        function uploadPhoto(input, tracking) {
+            if (!input.files?.[0]) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const dataUrl = e.target.result;
+
+                const ghUser  = localStorage.getItem('gh_username');
+                const ghRepo  = localStorage.getItem('gh_repo');
+                const ghToken = localStorage.getItem('gh_token');
+
+                if (ghUser && ghRepo && ghToken) {
+                    const uploadedUrl = await uploadPhotoToGitHub(dataUrl, tracking, ghUser, ghRepo, ghToken);
+                    if (uploadedUrl) {
+                        photos[tracking] = uploadedUrl;
+                    } else {
+                        photos[tracking] = dataUrl;
+                    }
+                } else {
+                    photos[tracking] = dataUrl;
+                    showToast('⚠️ กรุณาตั้งค่า GitHub ในหน้า Settings เพื่อเก็บรูปถาวร', 'warning');
+                }
+
+                updateStats();
+                renderRecords();
+                renderDailySummary();
+            };
+            reader.readAsDataURL(file);
         }
 
         // ============================================================
@@ -1392,17 +1376,15 @@
         }
 
         // ============================================================
-        // GAS CODE — ฝังไว้ใน HTML เพื่อให้คัดลอกได้จากหน้าเว็บ
+        // GAS CODE
         // ============================================================
         const GAS_CODE = `// ================================================================
-// Tracking Dashboard — Google Apps Script V3
-// วิธีใช้: วางโค้ดนี้ใน script.google.com → Code.gs
-//          แก้ sheetId และ folderId ด้านล่าง แล้ว Deploy เป็น Web App
+// Tracking Dashboard — Google Apps Script V3 (รองรับ GitHub Photos)
 // ================================================================
 
 var CONFIG = {
-  sheetId:   "YOUR_GOOGLE_SHEET_ID",   // ← แก้ตรงนี้
-  folderId:  "YOUR_DRIVE_FOLDER_ID",   // ← แก้ตรงนี้ (สำหรับเก็บรูปถ้าไม่ใช้ GitHub)
+  sheetId:   "1QZWOH7L9OgRvrBwzoRuseg3tCYWcIoG9D8vMkpRB_DY",   // ← แก้เป็น Sheet ID ของคุณ
+  folderId:  "1Axx6dXHQ1jz4qH0OfpXjQZ0Azy6lcHus",   // Drive Folder (สำรอง)
   sheetName: "TrackingData",
   headers: [
     "ID","หมายเลขสิ่งของ","รหัสที่ทำการปลายทาง","ผู้ดำเนินการ",
@@ -1416,7 +1398,7 @@ function doGet(e) {
   var action = e && e.parameter && e.parameter.action;
   if (action === "read")  return readData();
   if (action === "stats") return getStats();
-  return jsonResponse({ status: "ok", version: "V3" });
+  return jsonResponse({ status: "ok", version: "V3-GitHub" });
 }
 
 function doPost(e) {
@@ -1436,7 +1418,6 @@ function doPost(e) {
 function writeData(payload) {
   var ss     = SpreadsheetApp.openById(CONFIG.sheetId);
   var sheet  = getOrCreateSheet(ss);
-  var folder = DriveApp.getFolderById(CONFIG.folderId);
   var data   = payload.parcels || [];
   var photos = payload.photos  || {};
   var mode   = payload.mode    || "append";
@@ -1450,7 +1431,7 @@ function writeData(payload) {
 
   var added = 0, updated = 0;
   data.forEach(function(item) {
-    var photoUrl = photos[item.tracking] ? uploadPhotoToDrive(folder, photos, item.tracking) : (item.photoUrl || "");
+    var photoUrl = photos[item.tracking] || item.photoUrl || "";
     var nowStr   = Utilities.formatDate(now, "Asia/Bangkok", "dd/MM/yyyy HH:mm");
     var rowData  = [item.id, item.tracking, item.branch, item.operator, item.datetime,
                     item.reason, item.lazada, item.holdDays, item.attempts, item.status,
@@ -1581,7 +1562,6 @@ function jsonResponse(obj) {
                 setTimeout(() => { btn.innerHTML = orig; btn.classList.replace('bg-emerald-500', 'bg-green-600'); }, 2000);
                 showToast('คัดลอกโค้ด GAS แล้ว! ไปวางใน Code.gs ได้เลย', 'success');
             } catch {
-                // Fallback: select text in pre
                 const pre = document.getElementById('gasCodePreview');
                 if (pre) { const sel = window.getSelection(); const range = document.createRange(); range.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(range); }
                 showToast('เลือกข้อความแล้ว — กด Ctrl+C เพื่อคัดลอก', 'info');
@@ -1806,7 +1786,6 @@ function jsonResponse(obj) {
 
         // ============================================================
         // EXPORT TO GOOGLE SHEET
-        // mode: 'append' = เพิ่ม/อัปเดต, 'replace' = แทนที่ทั้งหมด
         // ============================================================
         async function exportToGoogleSheet(mode) {
             document.getElementById('syncMenu')?.classList.add('hidden');
@@ -1815,7 +1794,7 @@ function jsonResponse(obj) {
                 return;
             }
 
-            const scriptUrl = localStorage.getItem('google_script_url');
+            const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
             if (!scriptUrl) {
                 showToast('กรุณาตั้งค่า Google Apps Script URL ก่อน', 'warning');
                 showPage('settings');
@@ -1846,7 +1825,6 @@ function jsonResponse(obj) {
                     body: JSON.stringify(payload)
                 });
 
-                // no-cors ไม่สามารถอ่าน response body ได้ — ถือว่าสำเร็จ
                 showToast(`${modeLabel}สำเร็จ! ${filteredParcels.length} รายการ → ตรวจสอบใน Google Sheet`, 'success');
 
             } catch (error) {
@@ -1856,11 +1834,11 @@ function jsonResponse(obj) {
         }
 
         // ============================================================
-        // SYNC STATUS CHANGE - อัปเดตสถานะรายการเดียวไปที่ Sheet
+        // SYNC STATUS CHANGE
         // ============================================================
         async function syncStatusToSheet(tracking, status) {
-            const scriptUrl = localStorage.getItem('google_script_url');
-            if (!scriptUrl) return; // ไม่มี URL = ไม่ sync
+            const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
+            if (!scriptUrl) return;
 
             try {
                 await fetch(scriptUrl, {
@@ -1879,10 +1857,10 @@ function jsonResponse(obj) {
         }
 
         // ============================================================
-        // SYNC DELETE - ซิงค์การลบไปที่ Sheet
+        // SYNC DELETE
         // ============================================================
         async function syncDeleteToSheet(tracking) {
-            const scriptUrl = localStorage.getItem('google_script_url');
+            const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
             if (!scriptUrl) return;
 
             try {
@@ -1897,9 +1875,8 @@ function jsonResponse(obj) {
             }
         }
 
-        // ซิงค์ข้อมูลปัจจุบันทั้งหมดให้ตรงกับ Sheet (ใช้ replace)
         async function syncDeleteFromSheet() {
-            if (!confirm(`⚠️ ซิงค์การลบ\n\nSheet จะถูกล้างแล้วเขียนใหม่ด้วยข้อมูล Dashboard ปัจจุบัน (${parcels.length} รายการ)\n\nยืนยัน?`)) return;
+            if (!confirm(`⚠️ ซิงค์การลบ\\n\\nSheet จะถูกล้างแล้วเขียนใหม่ด้วยข้อมูล Dashboard ปัจจุบัน (${parcels.length} รายการ)\\n\\nยืนยัน?`)) return;
             await exportToGoogleSheet('replace');
         }
 
@@ -1907,31 +1884,25 @@ function jsonResponse(obj) {
             const p = parcels.find(x => x.id === id);
             if (!p) return;
 
-            if (!confirm(`ยืนยันลบรายการ\n\nหมายเลข: ${p.tracking}\nที่ทำการ: ${p.branch}\n\nรายการนี้จะถูกลบถาวร`)) {
+            if (!confirm(`ยืนยันลบรายการ\\n\\nหมายเลข: ${p.tracking}\\nที่ทำการ: ${p.branch}\\n\\nรายการนี้จะถูกลบถาวร`)) {
                 return;
             }
 
-            // Remove from parcels
             parcels = parcels.filter(x => x.id !== id);
 
-            // Remove photo if exists
             if (photos[p.tracking]) {
                 delete photos[p.tracking];
             }
 
-            // Update filtered
             filteredParcels = filteredParcels.filter(x => x.id !== id);
 
-            // Re-render everything
             updateStats();
             renderRecords();
             renderDailySummary();
             updateCharts();
 
-            // Auto-sync การลบไปที่ Sheet (background)
             syncDeleteToSheet(p.tracking);
 
-            // Show toast
             showToast(`ลบรายการ ${p.tracking} สำเร็จ`, 'success');
         }
 
@@ -1941,16 +1912,14 @@ function jsonResponse(obj) {
                 return;
             }
 
-            if (!confirm(`⚠️ ล้างข้อมูลทั้งหมด\n\nรายการทั้งหมด ${parcels.length} รายการจะถูกลบ\nรูปภาพทั้งหมด ${Object.keys(photos).length} รายการจะถูกลบ\n\nการกระทำนี้ไม่สามารถย้อนกลับได้\n\nยืนยัน?`)) {
+            if (!confirm(`⚠️ ล้างข้อมูลทั้งหมด\\n\\nรายการทั้งหมด ${parcels.length} รายการจะถูกลบ\\nรูปภาพทั้งหมด ${Object.keys(photos).length} รายการจะถูกลบ\\n\\nการกระทำนี้ไม่สามารถย้อนกลับได้\\n\\nยืนยัน?`)) {
                 return;
             }
 
-            // Clear all data
             parcels = [];
             filteredParcels = [];
             photos = {};
 
-            // Reset charts
             if (charts.success) {
                 charts.success.data.datasets[0].data = [0, 0, 0];
                 charts.success.update();
@@ -1971,7 +1940,6 @@ function jsonResponse(obj) {
                 charts.branch.update();
             }
 
-            // Re-render
             updateStats();
             renderRecords();
             renderDailySummary();
