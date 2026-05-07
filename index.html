@@ -47,6 +47,8 @@
         .loading-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center; }
         .page-section { display: block; }
         .page-section.hidden { display: none; }
+        /* ซ่อนเมนู Settings โดยปกติ */
+        .settings-menu-hidden { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -73,7 +75,8 @@
             <a href="#" onclick="showPage('records'); return false;" id="nav-records" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-list w-5"></i><span>รายการทั้งหมด</span></a>
             <a href="#" onclick="showPage('import'); return false;" id="nav-import" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-file-import w-5"></i><span>นำเข้าข้อมูล</span></a>
             <a href="#" onclick="showPage('analytics'); return false;" id="nav-analytics" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-chart-pie w-5"></i><span>วิเคราะห์ข้อมูล</span></a>
-            <a href="#" onclick="requestSettingsAccess(); return false;" id="nav-settings" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-cog w-5"></i><span>ตั้งค่า <i class="fas fa-lock text-xs opacity-50 ml-1"></i></span></a>
+            <!-- ซ่อนเมนู Settings โดยปกติ - แสดงเมื่อกด Ctrl+Shift+S -->
+            <a href="#" onclick="showPage('settings'); return false;" id="nav-settings" class="sidebar-item settings-menu-hidden flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-cog w-5"></i><span>ตั้งค่า <i class="fas fa-lock text-xs opacity-50 ml-1"></i></span></a>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-slate-700">
             <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">
@@ -209,7 +212,7 @@
             <div id="page-settings" class="page-section hidden animate-fade-in">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-cog text-blue-500"></i>การตั้งค่าระบบ</h2>
-                    <button onclick="lockSettings()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-xl font-medium transition"><i class="fas fa-lock"></i>ล็อคการตั้งค่า</button>
+                    <button onclick="hideSettings()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 hover:text-red-600 text-gray-600 rounded-xl font-medium transition"><i class="fas fa-eye-slash"></i>ซ่อนเมนู</button>
                 </div>
                 <div class="max-w-3xl mx-auto space-y-6">
                     <!-- ① GAS URL -->
@@ -287,29 +290,11 @@
 </div>
 
 <!-- Photo Modal -->
-<div id="photoModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4" onclick="closePhotoModal(event)" style="display:none;">
+<div id="photoModal" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4" onclick="closePhotoModal(event)">
     <div class="relative max-w-3xl w-full h-full flex flex-col items-center justify-center" onclick="event.stopPropagation()">
         <img id="modalPhoto" class="max-w-full max-h-[80vh] rounded-2xl shadow-2xl object-contain" src="" alt="">
         <p id="modalTracking" class="text-white text-center mt-4 font-mono text-lg"></p>
         <button onclick="closePhotoModal()" class="absolute -top-4 -right-4 bg-white/20 hover:bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center transition text-xl"><i class="fas fa-times"></i></button>
-    </div>
-</div>
-
-<!-- Password Modal -->
-<div id="passwordModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden items-center justify-center p-4" style="display:none;">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-lock"></i></div>
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white">🔒 ยืนยันตัวตนผู้ดูแลระบบ</h3>
-            <p class="text-sm text-gray-500 mt-2">กรุณาใส่รหัสผ่านเพื่อดำเนินการ</p>
-        </div>
-        <div class="space-y-4">
-            <input type="password" id="adminPassInput" placeholder="รหัสผ่าน..." class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 focus:ring-2 focus:ring-red-500 outline-none transition text-center text-lg font-mono tracking-widest" onkeypress="if(event.key==='Enter')confirmActionWithPassword()">
-            <div class="flex gap-3">
-                <button onclick="closePasswordModal()" class="flex-1 py-3 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition">ยกเลิก</button>
-                <button onclick="confirmActionWithPassword()" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold shadow-lg shadow-red-500/30 transition">ยืนยัน</button>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -321,68 +306,125 @@ let parcels = [];
 let filteredParcels = [];
 let photos = {};
 let charts = {};
-const API_URL = "https://script.google.com/macros/s/AKfycbwwIET-qwtlX3rupUzvLf5x8KIm5jkZCOJLrtvDqI-jVT2sStRA5JbS18-apD8kzVwq/exec";
-const ADMIN_PASSWORD = 'p@ss1234';
+const API_URL = "https://script.google.com/macros/s/AKfycbw54cu7wx917ZztY9aGaM6JB_Pd7VczJLDkirJU8a6b6bvxN1xw7HXwtMh55fpMd2E_/exec";
 let pendingAction = null;
-let settingsUnlocked = false;
+let settingsVisible = false; // ตัวแปรติดตามสถานะเมนู Settings
 
 // ================================================================
 // Modal Helpers
 // ================================================================
-function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-function hideModal(id) { document.getElementById(id).style.display = 'none'; }
-
-// ================================================================
-// Password Protection
-// ================================================================
-function requestPassword(actionCallback) {
-    pendingAction = actionCallback;
-    showModal('passwordModal');
-    const input = document.getElementById('adminPassInput');
-    input.value = '';
-    setTimeout(() => input.focus(), 100);
-}
-function closePasswordModal() { hideModal('passwordModal'); pendingAction = null; }
-function confirmActionWithPassword() {
-    const val = document.getElementById('adminPassInput').value;
-    if (val === ADMIN_PASSWORD) {
-        closePasswordModal();
-        showToast('✅ ยืนยันตัวตนสำเร็จ', 'success');
-        if (pendingAction) Promise.resolve(pendingAction()).catch(e => console.error(e));
-    } else {
-        const el = document.getElementById('adminPassInput');
-        el.classList.add('border-red-500');
-        showToast('❌ รหัสผ่านไม่ถูกต้อง', 'error');
-        setTimeout(() => el.classList.remove('border-red-500'), 800);
+function showModal(id) { 
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            el.style.display = 'flex';
+        });
     }
 }
-function requestSettingsAccess() {
-    if (settingsUnlocked) { showPage('settings'); return; }
-    requestPassword(() => { settingsUnlocked = true; showPage('settings'); showToast('🔓 ปลดล็อคการตั้งค่าสำเร็จ', 'success'); });
+
+function hideModal(id) { 
+    const el = document.getElementById(id);
+    if (el) {
+        el.style.display = 'none';
+        el.classList.add('hidden');
+    }
 }
-function lockSettings() { settingsUnlocked = false; showPage('dashboard'); showToast('🔒 ล็อคการตั้งค่าแล้ว', 'info'); }
+
+// ================================================================
+// Keyboard Shortcut - Ctrl+Shift+S เพื่อแสดง/ซ่อนเมนู Settings
+// ================================================================
+document.addEventListener('keydown', function(e) {
+    // Ctrl + Shift + S
+    if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        toggleSettingsVisibility();
+    }
+});
+
+function toggleSettingsVisibility() {
+    const navSettings = document.getElementById('nav-settings');
+    settingsVisible = !settingsVisible;
+    
+    if (settingsVisible) {
+        navSettings.classList.remove('settings-menu-hidden');
+        showToast('🔓 แสดงเมนูตั้งค่าแล้ว (กด Ctrl+Shift+S เพื่อซ่อน)', 'success');
+        // โฟกัสที่เมนู settings
+        setTimeout(() => {
+            navSettings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            navSettings.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+            setTimeout(() => {
+                navSettings.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
+            }, 2000);
+        }, 100);
+    } else {
+        navSettings.classList.add('settings-menu-hidden');
+        showToast('🔒 ซ่อนเมนูตั้งค่าแล้ว', 'info');
+        // กลับไปหน้า dashboard
+        showPage('dashboard');
+    }
+}
+
+function requestSettingsAccess() {
+    // ไม่ต้องขอรหัสแล้ว - เข้าได้โดยตรง
+    showPage('settings');
+}
+
+function hideSettings() {
+    toggleSettingsVisibility();
+}
 
 // ================================================================
 // Navigation
 // ================================================================
 function showPage(page) {
+    hideModal('passwordModal');
+    hideModal('photoModal');
+    
     document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
     const el = document.getElementById('page-' + page);
     if (el) el.classList.remove('hidden');
+    
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
     const nav = document.getElementById('nav-' + page);
     if (nav) nav.classList.add('active');
-    const titles = { dashboard: 'แดชบอร์ดผู้ดูแลระบบ', records: 'รายการทั้งหมด', import: 'นำเข้าข้อมูล', analytics: 'วิเคราะห์ข้อมูล', settings: 'การตั้งค่าระบบ' };
+    
+    const titles = { 
+        dashboard: 'แดชบอร์ดผู้ดูแลระบบ', 
+        records: 'รายการทั้งหมด', 
+        import: 'นำเข้าข้อมูล', 
+        analytics: 'วิเคราะห์ข้อมูล', 
+        settings: 'การตั้งค่าระบบ' 
+    };
     document.getElementById('pageTitle').textContent = titles[page] || page;
+    
     if (page === 'dashboard' || page === 'analytics') updateCharts();
-    if (page === 'settings') { loadSettings(); loadGitHubSettings(); injectGASCode(); }
-    // Close sidebar on mobile
-    document.getElementById('sidebar').classList.add('-translate-x-full');
-    document.getElementById('sidebar').classList.remove('md:translate-x-0');
+    if (page === 'settings') { 
+        loadSettings(); 
+        loadGitHubSettings(); 
+        injectGASCode(); 
+    }
+    
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth < 768) {
+        sidebar.classList.add('-translate-x-full');
+    }
 }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-function toggleDarkMode() { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); updateCharts(); }
-function refreshData() { autoLoadFromSheet(); }
+
+function toggleSidebar() { 
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('-translate-x-full'); 
+}
+
+function toggleDarkMode() { 
+    document.documentElement.classList.toggle('dark'); 
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); 
+    updateCharts(); 
+}
+
+function refreshData() { 
+    autoLoadFromSheet(); 
+}
 
 // ================================================================
 // Stats & Render
@@ -392,12 +434,20 @@ function updateStats() {
     const success = filteredParcels.filter(p => p.status === 'สำเร็จ').length;
     const failed  = filteredParcels.filter(p => p.status === 'ไม่สำเร็จ').length;
     const withPhoto = filteredParcels.filter(p => photos[p.tracking] || p.photoUrl).length;
-    document.getElementById('statTotal').textContent   = total;
-    document.getElementById('statSuccess').textContent = success;
-    document.getElementById('statFailed').textContent  = failed;
-    document.getElementById('statPhoto').textContent   = withPhoto;
-    document.getElementById('recordCount').textContent = total;
-    document.getElementById('lastUpdated').textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
+    
+    const statTotal = document.getElementById('statTotal');
+    const statSuccess = document.getElementById('statSuccess');
+    const statFailed = document.getElementById('statFailed');
+    const statPhoto = document.getElementById('statPhoto');
+    const recordCount = document.getElementById('recordCount');
+    const lastUpdated = document.getElementById('lastUpdated');
+    
+    if (statTotal) statTotal.textContent = total;
+    if (statSuccess) statSuccess.textContent = success;
+    if (statFailed) statFailed.textContent = failed;
+    if (statPhoto) statPhoto.textContent = withPhoto;
+    if (recordCount) recordCount.textContent = total;
+    if (lastUpdated) lastUpdated.textContent = 'อัปเดตล่าสุด: ' + new Date().toLocaleTimeString('th-TH');
 }
 
 function getStatusClass(status) {
@@ -413,10 +463,13 @@ function formatDateTime(dt) {
 
 function renderRecords() {
     const tbody = document.getElementById('recordsTableBody');
+    if (!tbody) return;
+    
     if (!filteredParcels.length) {
         tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></td></tr>';
         return;
     }
+    
     tbody.innerHTML = filteredParcels.map((p, idx) => {
         const photoSrc = photos[p.tracking] || p.photoUrl || '';
         const photoCell = photoSrc
@@ -448,6 +501,8 @@ function renderRecords() {
 
 function renderDailySummary() {
     const container = document.getElementById('dailySummaryContainer');
+    if (!container) return;
+    
     const byBranch = {};
     filteredParcels.forEach(p => {
         const key = p.branch || 'ไม่ระบุ';
@@ -458,8 +513,13 @@ function renderDailySummary() {
         else byBranch[key].pending++;
         if (p.operator) byBranch[key].operators.add(p.operator);
     });
+    
     const summaries = Object.values(byBranch);
-    if (!summaries.length) { container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></div>'; return; }
+    if (!summaries.length) { 
+        container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-4xl mb-3 opacity-30 block"></i><p>ยังไม่มีข้อมูล</p></div>'; 
+        return; 
+    }
+    
     container.innerHTML = summaries.map(s => {
         const rate = s.total ? Math.round(s.success/s.total*100) : 0;
         const rateBg = rate>=80 ? 'bg-green-100 dark:bg-green-900/30' : rate>=50 ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-red-100 dark:bg-red-900/30';
@@ -483,10 +543,11 @@ function renderDailySummary() {
 // Filter
 // ================================================================
 function applyFilter() {
-    const date   = document.getElementById('filterDate').value;
-    const branch = document.getElementById('filterBranch').value.toLowerCase().trim();
-    const type   = document.getElementById('filterType').value;
-    const status = document.getElementById('filterStatus').value;
+    const date   = document.getElementById('filterDate')?.value;
+    const branch = (document.getElementById('filterBranch')?.value || '').toLowerCase().trim();
+    const type   = document.getElementById('filterType')?.value;
+    const status = document.getElementById('filterStatus')?.value;
+    
     filteredParcels = parcels.filter(p => {
         if (date && !p.datetime?.includes(date.split('-').reverse().join('/'))) return false;
         if (branch && !p.branch?.toLowerCase().includes(branch)) return false;
@@ -494,15 +555,29 @@ function applyFilter() {
         if (status && p.status !== status) return false;
         return true;
     });
-    updateStats(); renderRecords(); renderDailySummary(); updateCharts();
+    
+    updateStats(); 
+    renderRecords(); 
+    renderDailySummary(); 
+    updateCharts();
 }
+
 function clearFilter() {
-    document.getElementById('filterDate').value = '';
-    document.getElementById('filterBranch').value = '';
-    document.getElementById('filterType').value = '';
-    document.getElementById('filterStatus').value = '';
+    const filterDate = document.getElementById('filterDate');
+    const filterBranch = document.getElementById('filterBranch');
+    const filterType = document.getElementById('filterType');
+    const filterStatus = document.getElementById('filterStatus');
+    
+    if (filterDate) filterDate.value = '';
+    if (filterBranch) filterBranch.value = '';
+    if (filterType) filterType.value = '';
+    if (filterStatus) filterStatus.value = '';
+    
     filteredParcels = [...parcels];
-    updateStats(); renderRecords(); renderDailySummary(); updateCharts();
+    updateStats(); 
+    renderRecords(); 
+    renderDailySummary(); 
+    updateCharts();
 }
 
 // ================================================================
@@ -514,51 +589,72 @@ function updateStatus(id, newStatus) {
     p.status = newStatus;
     const fp = filteredParcels.find(x => x.id === id);
     if (fp) fp.status = newStatus;
-    updateStats(); renderDailySummary(); updateCharts();
+    updateStats(); 
+    renderDailySummary(); 
+    updateCharts();
     syncStatusToSheet(p.tracking, newStatus);
 }
 
 async function deleteParcel(id) {
     const p = parcels.find(x => x.id === id);
     if (!p) return;
-    requestPassword(async () => {
-        showToast('🗑️ กำลังลบรายการ...', 'info');
-        await deletePhotoFromGitHub(p.tracking);
-        parcels = parcels.filter(x => x.id !== id);
-        if (photos[p.tracking]) delete photos[p.tracking];
-        filteredParcels = filteredParcels.filter(x => x.id !== id);
-        updateStats(); renderRecords(); renderDailySummary(); updateCharts();
-        syncDeleteToSheet(p.tracking);
-        showToast(`✅ ลบรายการ ${p.tracking} สำเร็จ`, 'success');
-    });
+    
+    if (!confirm(`ต้องการลบรายการ ${p.tracking} ใช่หรือไม่?`)) return;
+    
+    showToast('🗑️ กำลังลบรายการ...', 'info');
+    await deletePhotoFromGitHub(p.tracking);
+    parcels = parcels.filter(x => x.id !== id);
+    if (photos[p.tracking]) delete photos[p.tracking];
+    filteredParcels = filteredParcels.filter(x => x.id !== id);
+    updateStats(); 
+    renderRecords(); 
+    renderDailySummary(); 
+    updateCharts();
+    syncDeleteToSheet(p.tracking);
+    showToast(`✅ ลบรายการ ${p.tracking} สำเร็จ`, 'success');
 }
 
 async function confirmClearAll() {
     if (!parcels.length) { showToast('ไม่มีข้อมูลให้ล้าง', 'warning'); return; }
-    requestPassword(async () => {
-        const ghPhotos = Object.keys(photos).filter(t => photos[t]?.includes('raw.githubusercontent.com'));
-        if (ghPhotos.length > 0) {
-            showToast(`กำลังลบรูปภาพ ${ghPhotos.length} รายการจาก GitHub...`, 'info');
-            for (const t of ghPhotos) await deletePhotoFromGitHub(t);
-        }
-        parcels = []; filteredParcels = []; photos = {};
-        Object.values(charts).forEach(c => { if (c) { try { c.data.datasets[0].data = [0,0,0]; c.update(); } catch(e){} } });
-        updateStats(); renderRecords(); renderDailySummary();
-        showToast('✅ ล้างข้อมูลทั้งหมดสำเร็จ', 'success');
+    
+    if (!confirm(`⚠️ ต้องการล้างข้อมูลทั้งหมด ${parcels.length} รายการใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้!`)) return;
+    
+    const ghPhotos = Object.keys(photos).filter(t => photos[t]?.includes('raw.githubusercontent.com'));
+    if (ghPhotos.length > 0) {
+        showToast(`กำลังลบรูปภาพ ${ghPhotos.length} รายการจาก GitHub...`, 'info');
+        for (const t of ghPhotos) await deletePhotoFromGitHub(t);
+    }
+    parcels = []; 
+    filteredParcels = []; 
+    photos = {};
+    
+    Object.values(charts).forEach(c => { 
+        if (c) { 
+            try { 
+                c.data.datasets[0].data = [0,0,0]; 
+                c.update(); 
+            } catch(e){} 
+        } 
     });
+    
+    updateStats(); 
+    renderRecords(); 
+    renderDailySummary();
+    showToast('✅ ล้างข้อมูลทั้งหมดสำเร็จ', 'success');
 }
 
 // ================================================================
 // Photo — GitHub API
 // ================================================================
 function uploadPhoto(input, tracking) {
-    if (!input.files?.[0]) return;
+    if (!input?.files?.[0]) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
         const dataUrl = e.target.result;
         const ghUser  = localStorage.getItem('gh_username');
         const ghRepo  = localStorage.getItem('gh_repo');
         const ghToken = localStorage.getItem('gh_token');
+        
         if (ghUser && ghRepo && ghToken) {
             const url = await uploadPhotoToGitHub(dataUrl, tracking, ghUser, ghRepo, ghToken);
             photos[tracking] = url || dataUrl;
@@ -566,7 +662,9 @@ function uploadPhoto(input, tracking) {
             photos[tracking] = dataUrl;
             showToast('รูปภาพเก็บชั่วคราว (ตั้งค่า GitHub เพื่อเก็บถาวร)', 'warning');
         }
-        updateStats(); renderRecords(); renderDailySummary();
+        updateStats(); 
+        renderRecords(); 
+        renderDailySummary();
     };
     reader.readAsDataURL(input.files[0]);
 }
@@ -577,11 +675,13 @@ async function uploadPhotoToGitHub(dataUrl, tracking, user, repo, token) {
         const base64 = dataUrl.split(',')[1];
         const ext    = dataUrl.split(';')[0].split('/')[1] || 'jpg';
         const path   = `photos/${tracking}_${Date.now()}.${ext}`;
+        
         const res = await fetch(`https://api.github.com/repos/${user}/${repo}/contents/${path}`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
             body: JSON.stringify({ message: `Add photo ${tracking}`, content: base64 })
         });
+        
         if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
         const result = await res.json();
         showToast('อัปโหลดรูปสำเร็จ ✓', 'success');
@@ -596,20 +696,23 @@ async function uploadPhotoToGitHub(dataUrl, tracking, user, repo, token) {
 async function deletePhotoFromGitHub(tracking) {
     const photoUrl = photos[tracking];
     if (!photoUrl || !photoUrl.includes('raw.githubusercontent.com')) return;
+    
     const ghUser  = localStorage.getItem('gh_username');
     const ghRepo  = localStorage.getItem('gh_repo');
     const ghToken = localStorage.getItem('gh_token');
+    
     if (!ghUser || !ghRepo || !ghToken) return;
+    
     try {
-        // Extract path from raw URL
         const match = photoUrl.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
         if (!match) return;
         const filePath = match[1];
-        // Get SHA first
+        
         const getRes = await fetch(`https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${filePath}`, {
             headers: { 'Authorization': `Bearer ${ghToken}`, 'Accept': 'application/vnd.github+json' }
         });
         if (!getRes.ok) return;
+        
         const fileData = await getRes.json();
         await fetch(`https://api.github.com/repos/${ghUser}/${ghRepo}/contents/${filePath}`, {
             method: 'DELETE',
@@ -622,12 +725,19 @@ async function deletePhotoFromGitHub(tracking) {
 function openPhoto(tracking, directUrl) {
     const src = directUrl || photos[tracking] || '';
     if (!src) return;
-    document.getElementById('modalPhoto').src = src;
-    document.getElementById('modalTracking').textContent = tracking;
+    
+    const modalPhoto = document.getElementById('modalPhoto');
+    const modalTracking = document.getElementById('modalTracking');
+    
+    if (modalPhoto) modalPhoto.src = src;
+    if (modalTracking) modalTracking.textContent = tracking;
+    
     showModal('photoModal');
 }
+
 function closePhotoModal(event) {
-    if (!event || event.target === document.getElementById('photoModal')) hideModal('photoModal');
+    const modal = document.getElementById('photoModal');
+    if (!event || event.target === modal) hideModal('photoModal');
 }
 
 // ================================================================
@@ -639,26 +749,127 @@ function initCharts() {
     const gridColor = isDark ? '#334155' : '#e2e8f0';
 
     const ctx1 = document.getElementById('successChart')?.getContext('2d');
-    if (ctx1) charts.success = new Chart(ctx1, { type: 'doughnut', data: { labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], datasets: [{ data: [0,0,0], backgroundColor: ['#10b981','#ef4444','#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor, padding: 16, font: { family: 'Sarabun' } } } } } });
+    if (ctx1) charts.success = new Chart(ctx1, { 
+        type: 'doughnut', 
+         { 
+            labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], 
+            datasets: [{ 
+                 [0,0,0], 
+                backgroundColor: ['#10b981','#ef4444','#f59e0b'], 
+                borderWidth: 0 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { 
+                    position: 'bottom', 
+                    labels: { color: textColor, padding: 16, font: { family: 'Sarabun' } } 
+                } 
+            } 
+        } 
+    });
 
     const ctx2 = document.getElementById('reasonChart')?.getContext('2d');
-    if (ctx2) charts.reason = new Chart(ctx2, { type: 'bar', data: { labels: [], datasets: [{ label: 'จำนวน', data: [], backgroundColor: 'rgba(139,92,246,0.8)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } }, y: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } } } });
+    if (ctx2) charts.reason = new Chart(ctx2, { 
+        type: 'bar', 
+         { 
+            labels: [], 
+            datasets: [{ 
+                label: 'จำนวน', 
+                 [], 
+                backgroundColor: 'rgba(139,92,246,0.8)', 
+                borderRadius: 6 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { ticks: { color: textColor, font: { family: 'Sarabun', size: 10 } }, grid: { display: false } }, 
+                y: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } } 
+            } 
+        } 
+    });
 
     const ctx3 = document.getElementById('operatorChart')?.getContext('2d');
-    if (ctx3) charts.operator = new Chart(ctx3, { type: 'bar', data: { labels: [], datasets: [{ label: 'รายการ', data: [], backgroundColor: 'rgba(59,130,246,0.8)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } }, y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 11 } }, grid: { display: false } } } } });
+    if (ctx3) charts.operator = new Chart(ctx3, { 
+        type: 'bar', 
+         { 
+            labels: [], 
+            datasets: [{ 
+                label: 'รายการ', 
+                 [], 
+                backgroundColor: 'rgba(59,130,246,0.8)', 
+                borderRadius: 6 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            indexAxis: 'y', 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { color: gridColor } }, 
+                y: { ticks: { color: textColor, font: { family: 'Sarabun', size: 11 } }, grid: { display: false } } 
+            } 
+        } 
+    });
 
     const ctx4 = document.getElementById('trendChart')?.getContext('2d');
-    if (ctx4) charts.trend = new Chart(ctx4, { type: 'line', data: { labels: [], datasets: [{ label: 'สำเร็จ', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true }, { label: 'ไม่สำเร็จ', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } } }, scales: { x: { ticks: { color: textColor }, grid: { color: gridColor } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } } });
+    if (ctx4) charts.trend = new Chart(ctx4, { 
+        type: 'line', 
+         { 
+            labels: [], 
+            datasets: [
+                { label: 'สำเร็จ',  [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.4, fill: true }, 
+                { label: 'ไม่สำเร็จ',  [], borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', tension: 0.4, fill: true }
+            ] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { labels: { color: textColor, font: { family: 'Sarabun' } } } }, 
+            scales: { 
+                x: { ticks: { color: textColor }, grid: { color: gridColor } }, 
+                y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+            } 
+        } 
+    });
 
     const ctx5 = document.getElementById('branchChart')?.getContext('2d');
-    if (ctx5) charts.branch = new Chart(ctx5, { type: 'bar', data: { labels: [], datasets: [{ label: 'รายการ', data: [], backgroundColor: 'rgba(245,158,11,0.8)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, y: { ticks: { color: textColor }, grid: { color: gridColor } } } } });
+    if (ctx5) charts.branch = new Chart(ctx5, { 
+        type: 'bar', 
+         { 
+            labels: [], 
+            datasets: [{ 
+                label: 'รายการ', 
+                 [], 
+                backgroundColor: 'rgba(245,158,11,0.8)', 
+                borderRadius: 6 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { display: false } }, 
+            scales: { 
+                x: { ticks: { color: textColor, font: { family: 'Sarabun' } }, grid: { display: false } }, 
+                y: { ticks: { color: textColor }, grid: { color: gridColor } } 
+            } 
+        } 
+    });
 }
 
 function updateCharts() {
     if (!charts.success) return;
+    
     const isDark = document.documentElement.classList.contains('dark');
     const textColor = isDark ? '#94a3b8' : '#64748b';
     const gridColor = isDark ? '#334155' : '#e2e8f0';
+    
     Object.values(charts).forEach(c => {
         if (!c) return;
         try {
@@ -673,38 +884,72 @@ function updateCharts() {
     const success = filteredParcels.filter(p => p.status==='สำเร็จ').length;
     const failed  = filteredParcels.filter(p => p.status==='ไม่สำเร็จ').length;
     const pending = filteredParcels.filter(p => p.status==='รอ').length;
-    if (charts.success) { charts.success.data.datasets[0].data = [success, failed, pending]; charts.success.update(); }
+    
+    if (charts.success) { 
+        charts.success.data.datasets[0].data = [success, failed, pending]; 
+        charts.success.update(); 
+    }
 
     const reasons = {};
-    filteredParcels.filter(p => p.status !== 'สำเร็จ').forEach(p => { const r = (p.reason||'อื่นๆ').substring(0,30); reasons[r] = (reasons[r]||0)+1; });
-    if (charts.reason) { charts.reason.data.labels = Object.keys(reasons); charts.reason.data.datasets[0].data = Object.values(reasons); charts.reason.update(); }
+    filteredParcels.filter(p => p.status !== 'สำเร็จ').forEach(p => { 
+        const r = (p.reason||'อื่นๆ').substring(0,30); 
+        reasons[r] = (reasons[r]||0)+1; 
+    });
+    
+    if (charts.reason) { 
+        charts.reason.data.labels = Object.keys(reasons); 
+        charts.reason.data.datasets[0].data = Object.values(reasons); 
+        charts.reason.update(); 
+    }
 
     const ops = {};
     filteredParcels.forEach(p => { if(p.operator) ops[p.operator] = (ops[p.operator]||0)+1; });
-    if (charts.operator) { charts.operator.data.labels = Object.keys(ops); charts.operator.data.datasets[0].data = Object.values(ops); charts.operator.update(); }
+    
+    if (charts.operator) { 
+        charts.operator.data.labels = Object.keys(ops); 
+        charts.operator.data.datasets[0].data = Object.values(ops); 
+        charts.operator.update(); 
+    }
 
     const branches = {};
     filteredParcels.forEach(p => { if(p.branch) branches[p.branch] = (branches[p.branch]||0)+1; });
-    if (charts.branch) { charts.branch.data.labels = Object.keys(branches); charts.branch.data.datasets[0].data = Object.values(branches); charts.branch.update(); }
+    
+    if (charts.branch) { 
+        charts.branch.data.labels = Object.keys(branches); 
+        charts.branch.data.datasets[0].data = Object.values(branches); 
+        charts.branch.update(); 
+    }
 }
 
 // ================================================================
 // File Import
 // ================================================================
 function handleFileUpload(event) {
-    const file = event.target.files[0];
+    const file = event.target?.files?.[0];
     if (!file) return;
+    
     const validExts = ['.xlsx','.xls','.csv'];
     const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    if (!validExts.includes(ext)) { alert('รองรับเฉพาะไฟล์ .xlsx, .xls, .csv'); return; }
+    
+    if (!validExts.includes(ext)) { 
+        alert('รองรับเฉพาะไฟล์ .xlsx, .xls, .csv'); 
+        return; 
+    }
+    
     const status = document.getElementById('importStatus');
     if (status) status.classList.remove('hidden');
+    
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
             let data;
             if (ext === '.csv') data = parseCSV(e.target.result);
-            else { const wb = XLSX.read(e.target.result, { type:'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; data = XLSX.utils.sheet_to_json(ws, { defval:'' }); }
+            else { 
+                const wb = XLSX.read(e.target.result, { type:'array' }); 
+                const ws = wb.Sheets[wb.SheetNames[0]]; 
+                data = XLSX.utils.sheet_to_json(ws, { defval:'' }); 
+            }
+            
             const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
             const imported = data.map((row, idx) => ({
                 id: maxId + idx + 1,
@@ -716,11 +961,19 @@ function handleFileUpload(event) {
                 lazada:   row['Lazada?'] || 'N',
                 holdDays: row['จำนวนวันที่ถือครอง (นับจากวันที่ปลายทาง)'] || row['จำนวนวันที่ถือครอง'] || '-',
                 attempts: row['จำนวนครั้งที่พยายามนำจ่าย'] || '0',
-                status:   'รอ', type: 'เปิดเซฟ', photoUrl: ''
+                status:   'รอ', 
+                type: 'เปิดเซฟ', 
+                photoUrl: ''
             }));
+            
             parcels = [...parcels, ...imported];
             filteredParcels = [...parcels];
-            updateStats(); renderRecords(); renderDailySummary(); updateCharts();
+            
+            updateStats(); 
+            renderRecords(); 
+            renderDailySummary(); 
+            updateCharts();
+            
             if (status) status.innerHTML = `<div class="flex items-center justify-center gap-2 text-green-600"><i class="fas fa-check-circle"></i><span>นำเข้าสำเร็จ ${imported.length} รายการ</span></div>`;
             setTimeout(() => { if (status) status.classList.add('hidden'); showPage('dashboard'); }, 1500);
         } catch(err) {
@@ -728,7 +981,9 @@ function handleFileUpload(event) {
             if (status) status.innerHTML = `<div class="flex items-center justify-center gap-2 text-red-600"><i class="fas fa-exclamation-circle"></i><span>เกิดข้อผิดพลาด: ${err.message}</span></div>`;
         }
     };
-    if (ext === '.csv') reader.readAsText(file); else reader.readAsArrayBuffer(file);
+    
+    if (ext === '.csv') reader.readAsText(file); 
+    else reader.readAsArrayBuffer(file);
 }
 
 function parseCSV(text) {
@@ -737,7 +992,9 @@ function parseCSV(text) {
     const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g,''));
     return lines.slice(1).map(line => {
         const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g,''));
-        const row = {}; headers.forEach((h, i) => row[h] = values[i]||''); return row;
+        const row = {}; 
+        headers.forEach((h, i) => row[h] = values[i]||''); 
+        return row;
     });
 }
 
@@ -745,12 +1002,16 @@ function parseCSV(text) {
 // Settings
 // ================================================================
 function saveSettings() {
-    const url = document.getElementById('settingScriptUrl').value.trim();
-    if (url && !url.startsWith('https://script.google.com')) { showToast('URL ไม่ถูกต้อง', 'error'); return; }
+    const url = document.getElementById('settingScriptUrl')?.value.trim();
+    if (url && !url.startsWith('https://script.google.com')) { 
+        showToast('URL ไม่ถูกต้อง', 'error'); 
+        return; 
+    }
     localStorage.setItem('google_script_url', url || API_URL);
     updateSyncStatus();
     showToast('บันทึกการตั้งค่าเรียบร้อยแล้ว', 'success');
 }
+
 function clearSettings() {
     if (!confirm('ยกเลิกการเชื่อมต่อ?')) return;
     localStorage.removeItem('google_script_url');
@@ -759,16 +1020,19 @@ function clearSettings() {
     updateSyncStatus();
     showToast('ยกเลิกการเชื่อมต่อแล้ว', 'warning');
 }
+
 function loadSettings() {
     const url = localStorage.getItem('google_script_url') || API_URL;
     const el = document.getElementById('settingScriptUrl');
     if (el) el.value = url;
     updateSyncStatus();
 }
+
 function updateSyncStatus() {
     const url = localStorage.getItem('google_script_url') || API_URL;
     const dot = document.getElementById('syncDot');
     const txt = document.getElementById('syncStatusText');
+    
     if (url) {
         if (dot) { dot.className = 'w-2 h-2 rounded-full bg-green-500 hidden md:block'; dot.title = 'เชื่อมต่อแล้ว'; }
         if (txt) txt.textContent = 'เชื่อมต่อแล้ว ✓';
@@ -777,30 +1041,43 @@ function updateSyncStatus() {
         if (txt) txt.textContent = 'ยังไม่ได้ตั้งค่า URL';
     }
 }
+
 function showSyncMenu(event) {
     event.stopPropagation();
     const menu = document.getElementById('syncMenu');
+    if (!menu) return;
     menu.classList.toggle('hidden');
-    const close = () => { menu.classList.add('hidden'); document.removeEventListener('click', close); };
+    const close = () => { 
+        menu.classList.add('hidden'); 
+        document.removeEventListener('click', close); 
+    };
     setTimeout(() => document.addEventListener('click', close), 0);
 }
+
 async function testConnection() {
     const url = (document.getElementById('settingScriptUrl')?.value.trim()) || localStorage.getItem('google_script_url') || API_URL;
     if (!url) { showToast('กรุณากรอก URL ก่อน', 'warning'); return; }
+    
     const banner = document.getElementById('connStatusBanner');
     const icon   = document.getElementById('connStatusIcon');
     const msg    = document.getElementById('connStatusMsg');
+    
     if (!banner) return;
+    
     banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600';
-    icon.className = 'fas fa-spinner fa-spin'; msg.textContent = 'กำลังทดสอบ...';
+    icon.className = 'fas fa-spinner fa-spin'; 
+    msg.textContent = 'กำลังทดสอบ...';
     banner.classList.remove('hidden');
+    
     try {
         await fetch(url + '?action=stats', { method:'GET', mode:'no-cors' });
         banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-green-50 dark:bg-green-900/20 text-green-700';
-        icon.className = 'fas fa-check-circle'; msg.textContent = 'เชื่อมต่อสำเร็จ! Script ทำงานปกติ';
+        icon.className = 'fas fa-check-circle'; 
+        msg.textContent = 'เชื่อมต่อสำเร็จ! Script ทำงานปกติ';
     } catch(err) {
         banner.className = 'mb-6 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium bg-red-50 dark:bg-red-900/20 text-red-700';
-        icon.className = 'fas fa-times-circle'; msg.textContent = 'เชื่อมต่อไม่ได้: ' + err.message;
+        icon.className = 'fas fa-times-circle'; 
+        msg.textContent = 'เชื่อมต่อไม่ได้: ' + err.message;
     }
 }
 
@@ -811,33 +1088,50 @@ function saveGitHubSettings() {
     const user  = document.getElementById('ghUsername')?.value.trim();
     const repo  = document.getElementById('ghRepo')?.value.trim();
     const token = document.getElementById('ghToken')?.value.trim();
-    if (!user || !repo || !token) { showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'warning'); return; }
+    
+    if (!user || !repo || !token) { 
+        showToast('กรุณากรอกข้อมูลให้ครบทุกช่อง', 'warning'); 
+        return; 
+    }
+    
     localStorage.setItem('gh_username', user);
     localStorage.setItem('gh_repo', repo);
     localStorage.setItem('gh_token', token);
     testGitHubConnection(user, repo, token);
 }
+
 function clearGitHubSettings() {
     localStorage.removeItem('gh_username');
     localStorage.removeItem('gh_repo');
     localStorage.removeItem('gh_token');
-    ['ghUsername','ghRepo','ghToken'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    
+    ['ghUsername','ghRepo','ghToken'].forEach(id => { 
+        const el = document.getElementById(id); 
+        if (el) el.value = ''; 
+    });
+    
     showGHBanner('ล้างการตั้งค่า GitHub แล้ว', 'warning');
     showToast('ล้างการตั้งค่า GitHub แล้ว', 'warning');
 }
+
 function loadGitHubSettings() {
     const u = localStorage.getItem('gh_username') || '';
     const r = localStorage.getItem('gh_repo')     || '';
     const t = localStorage.getItem('gh_token')    || '';
+    
     const uEl = document.getElementById('ghUsername'); if (uEl) uEl.value = u;
     const rEl = document.getElementById('ghRepo');     if (rEl) rEl.value = r;
     const tEl = document.getElementById('ghToken');    if (tEl) tEl.value = t;
+    
     if (u && r && t) showGHBanner(`GitHub: ${u}/${r} (บันทึกแล้ว)`, 'success');
 }
+
 async function testGitHubConnection(user, repo, token) {
     showGHBanner('กำลังทดสอบ GitHub...', 'info');
     try {
-        const res = await fetch(`https://api.github.com/repos/${user}/${repo}`, { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } });
+        const res = await fetch(`https://api.github.com/repos/${user}/${repo}`, { 
+            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } 
+        });
         if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
         const data = await res.json();
         showGHBanner(`เชื่อมต่อสำเร็จ! ${data.full_name} (${data.private?'🔒 Private':'🌐 Public'})`, 'success');
@@ -847,22 +1141,45 @@ async function testGitHubConnection(user, repo, token) {
         showToast('GitHub error: ' + err.message, 'error');
     }
 }
+
 function showGHBanner(msg, type) {
     const b = document.getElementById('ghStatusBanner');
     const i = document.getElementById('ghStatusIcon');
     const m = document.getElementById('ghStatusMsg');
+    
     if (!b) return;
-    const styles = { success:'bg-green-50 dark:bg-green-900/20 text-green-700', error:'bg-red-50 dark:bg-red-900/20 text-red-700', info:'bg-blue-50 dark:bg-blue-900/20 text-blue-700', warning:'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700' };
-    const icons  = { success:'fa-check-circle', error:'fa-times-circle', info:'fa-spinner fa-spin', warning:'fa-exclamation-triangle' };
+    
+    const styles = { 
+        success:'bg-green-50 dark:bg-green-900/20 text-green-700', 
+        error:'bg-red-50 dark:bg-red-900/20 text-red-700', 
+        info:'bg-blue-50 dark:bg-blue-900/20 text-blue-700', 
+        warning:'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700' 
+    };
+    const icons  = { 
+        success:'fa-check-circle', 
+        error:'fa-times-circle', 
+        info:'fa-spinner fa-spin', 
+        warning:'fa-exclamation-triangle' 
+    };
+    
     b.className = `mb-4 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium ${styles[type]}`;
-    i.className = `fas ${icons[type]}`; m.textContent = msg;
+    i.className = `fas ${icons[type]}`; 
+    m.textContent = msg;
     b.classList.remove('hidden');
 }
+
 function toggleTokenVisibility() {
-    const el = document.getElementById('ghToken'); const icon = document.getElementById('tokenEyeIcon');
+    const el = document.getElementById('ghToken'); 
+    const icon = document.getElementById('tokenEyeIcon');
     if (!el) return;
-    if (el.type === 'password') { el.type = 'text'; icon.className = 'fas fa-eye-slash'; }
-    else { el.type = 'password'; icon.className = 'fas fa-eye'; }
+    
+    if (el.type === 'password') { 
+        el.type = 'text'; 
+        icon.className = 'fas fa-eye-slash'; 
+    } else { 
+        el.type = 'password'; 
+        icon.className = 'fas fa-eye'; 
+    }
 }
 
 // ================================================================
@@ -871,12 +1188,15 @@ function toggleTokenVisibility() {
 async function autoLoadFromSheet() {
     const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
     if (!scriptUrl) return;
+    
     const overlay = document.getElementById('loadingOverlay');
     if (overlay) overlay.classList.remove('hidden');
+    
     try {
         const res = await fetch(scriptUrl + '?action=read&t=' + Date.now(), { method:'GET', mode:'cors' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const result = await res.json();
+        
         if (result.result === 'success' && result.data?.length > 0) {
             parcels = result.data.map(item => ({
                 id:       item.id || (Date.now() + Math.random()),
@@ -893,14 +1213,16 @@ async function autoLoadFromSheet() {
                 photoUrl: item.photoUrl || ''
             }));
             filteredParcels = [...parcels];
-            updateStats(); renderRecords(); renderDailySummary(); updateCharts();
+            updateStats(); 
+            renderRecords(); 
+            renderDailySummary(); 
+            updateCharts();
             showToast(`✅ โหลดข้อมูลสำเร็จ: ${parcels.length} รายการ`, 'success');
         } else {
             showToast('Google Sheet ยังไม่มีข้อมูล', 'info');
         }
     } catch(err) {
         console.warn('Auto-load failed:', err);
-        // GAS may not support cors without proper headers — silently fail
     } finally {
         if (overlay) overlay.classList.add('hidden');
     }
@@ -909,20 +1231,36 @@ async function autoLoadFromSheet() {
 async function syncFromSheet() {
     document.getElementById('syncMenu')?.classList.add('hidden');
     const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) { showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); showPage('settings'); return; }
+    
+    if (!scriptUrl) { 
+        showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); 
+        showPage('settings'); 
+        return; 
+    }
+    
     showToast('กำลังดึงข้อมูลจาก Google Sheet...', 'info');
+    
     try {
         const res = await fetch(scriptUrl + '?action=read&t=' + Date.now(), { method:'GET', mode:'cors' });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const result = await res.json();
+        
         if (result.result === 'success' && result.data?.length > 0) {
             result.data.forEach(item => {
                 const existing = parcels.find(p => p.tracking === item.tracking);
-                if (existing) { existing.status = item.status || existing.status; existing.photoUrl = item.photoUrl || existing.photoUrl; }
-                else { const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => Number(p.id)||0)) : 0; parcels.push({ ...item, id: maxId + 1 }); }
+                if (existing) { 
+                    existing.status = item.status || existing.status; 
+                    existing.photoUrl = item.photoUrl || existing.photoUrl; 
+                } else { 
+                    const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => Number(p.id)||0)) : 0; 
+                    parcels.push({ ...item, id: maxId + 1 }); 
+                }
             });
             filteredParcels = [...parcels];
-            updateStats(); renderRecords(); renderDailySummary(); updateCharts();
+            updateStats(); 
+            renderRecords(); 
+            renderDailySummary(); 
+            updateCharts();
             showToast(`ดึงข้อมูลสำเร็จ! ${result.total} รายการ`, 'success');
         } else {
             showToast('Sheet ยังไม่มีข้อมูล', 'info');
@@ -935,46 +1273,77 @@ async function syncFromSheet() {
 
 async function exportToGoogleSheet(mode) {
     document.getElementById('syncMenu')?.classList.add('hidden');
-    if (!filteredParcels.length) { showToast('ไม่มีข้อมูลให้ส่งออก', 'warning'); return; }
+    
+    if (!filteredParcels.length) { 
+        showToast('ไม่มีข้อมูลให้ส่งออก', 'warning'); 
+        return; 
+    }
+    
     const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
-    if (!scriptUrl) { showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); showPage('settings'); return; }
+    if (!scriptUrl) { 
+        showToast('กรุณาตั้งค่า URL ก่อน', 'warning'); 
+        showPage('settings'); 
+        return; 
+    }
+    
     mode = mode || 'append';
     const label = mode === 'replace' ? 'แทนที่ข้อมูลทั้งหมด' : 'ส่งข้อมูล';
     showToast(`กำลัง${label}...`, 'info');
+    
     try {
-        // Only send photos that are dataURLs (not already GitHub URLs)
         const photosToSend = {};
         filteredParcels.forEach(p => {
             if (photos[p.tracking] && photos[p.tracking].startsWith('data:')) photosToSend[p.tracking] = photos[p.tracking];
         });
-        // Send parcels without large photo data (use photoUrl field for GitHub URLs)
-        const parcelsToSend = filteredParcels.map(p => ({ ...p, photoUrl: photos[p.tracking]?.startsWith('http') ? photos[p.tracking] : (p.photoUrl||'') }));
-        await fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'write', mode, parcels: parcelsToSend, photos: photosToSend }) });
+        
+        const parcelsToSend = filteredParcels.map(p => ({ 
+            ...p, 
+            photoUrl: photos[p.tracking]?.startsWith('http') ? photos[p.tracking] : (p.photoUrl||'') 
+        }));
+        
+        await fetch(scriptUrl, { 
+            method:'POST', 
+            mode:'no-cors', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ action:'write', mode, parcels: parcelsToSend, photos: photosToSend }) 
+        });
+        
         showToast(`${label}สำเร็จ! ${filteredParcels.length} รายการ — ตรวจสอบใน Google Sheet`, 'success');
     } catch(err) {
-        console.error(err); showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+        console.error(err); 
+        showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
     }
 }
 
 async function syncStatusToSheet(tracking, status) {
     const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
     if (!scriptUrl) return;
-    try { await fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'update', tracking, updates:{status} }) }); }
-    catch(e) { console.warn('Sync status failed:', e); }
+    try { 
+        await fetch(scriptUrl, { 
+            method:'POST', 
+            mode:'no-cors', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ action:'update', tracking, updates:{status} }) 
+        }); 
+    } catch(e) { console.warn('Sync status failed:', e); }
 }
 
 async function syncDeleteToSheet(tracking) {
     const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
     if (!scriptUrl) return;
-    try { await fetch(scriptUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'delete', tracking }) }); }
-    catch(e) { console.warn('Sync delete failed:', e); }
+    try { 
+        await fetch(scriptUrl, { 
+            method:'POST', 
+            mode:'no-cors', 
+            headers:{'Content-Type':'application/json'}, 
+            body: JSON.stringify({ action:'delete', tracking }) 
+        }); 
+    } catch(e) { console.warn('Sync delete failed:', e); }
 }
 
 async function syncDeleteFromSheet() {
-    requestPassword(async () => {
-        if (!confirm(`ซิงค์การลบ\n\nSheet จะถูกล้างและเขียนใหม่ด้วยข้อมูล Dashboard ปัจจุบัน (${parcels.length} รายการ)\n\nยืนยัน?`)) return;
-        await exportToGoogleSheet('replace');
-    });
+    if (!confirm(`ซิงค์การลบ\n\nSheet จะถูกล้างและเขียนใหม่ด้วยข้อมูล Dashboard ปัจจุบัน (${parcels.length} รายการ)\n\nยืนยัน?`)) return;
+    await exportToGoogleSheet('replace');
 }
 
 // ================================================================
@@ -984,22 +1353,44 @@ function exportPDF() {
     try {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('l','mm','a4');
-        doc.setFontSize(16); doc.text('Report - Parcel Delivery', 14, 15);
-        doc.setFontSize(10); doc.text('Date: ' + new Date().toLocaleDateString('th-TH'), 14, 22);
-        doc.autoTable({ startY:30, head:[['Tracking','Destination','Operator','Date','Reason','Attempts','Status']], body: filteredParcels.map(p => [p.tracking, p.branch, p.operator, p.datetime, (p.reason||'').substring(0,30), p.attempts, p.status]), theme:'grid', styles:{fontSize:8, cellPadding:2}, headStyles:{fillColor:[59,130,246]} });
+        doc.setFontSize(16); 
+        doc.text('Report - Parcel Delivery', 14, 15);
+        doc.setFontSize(10); 
+        doc.text('Date: ' + new Date().toLocaleDateString('th-TH'), 14, 22);
+        doc.autoTable({ 
+            startY:30, 
+            head:[['Tracking','Destination','Operator','Date','Reason','Attempts','Status']], 
+            body: filteredParcels.map(p => [p.tracking, p.branch, p.operator, p.datetime, (p.reason||'').substring(0,30), p.attempts, p.status]), 
+            theme:'grid', 
+            styles:{fontSize:8, cellPadding:2}, 
+            headStyles:{fillColor:[59,130,246]} 
+        });
         doc.save(`Tracking_Report_${new Date().toISOString().slice(0,10)}.pdf`);
-    } catch(e) { showToast('Export PDF ไม่สำเร็จ: ' + e.message, 'error'); }
+    } catch(e) { 
+        showToast('Export PDF ไม่สำเร็จ: ' + e.message, 'error'); 
+    }
 }
+
 function exportExcel() {
     try {
         const ws = XLSX.utils.json_to_sheet(filteredParcels.map(p => ({
-            'หมายเลขสิ่งของ': p.tracking, 'รหัสที่ทำการ': p.branch, 'ผู้ดำเนินการ': p.operator,
-            'วันที่เวลา': p.datetime, 'สาเหตุ': p.reason, 'Lazada': p.lazada,
-            'วันที่ถือครอง': p.holdDays, 'พยายามนำจ่าย': p.attempts, 'สถานะ': p.status, 'ประเภท': p.type
+            'หมายเลขสิ่งของ': p.tracking, 
+            'รหัสที่ทำการ': p.branch, 
+            'ผู้ดำเนินการ': p.operator,
+            'วันที่เวลา': p.datetime, 
+            'สาเหตุ': p.reason, 
+            'Lazada': p.lazada,
+            'วันที่ถือครอง': p.holdDays, 
+            'พยายามนำจ่าย': p.attempts, 
+            'สถานะ': p.status, 
+            'ประเภท': p.type
         })));
-        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Tracking');
+        const wb = XLSX.utils.book_new(); 
+        XLSX.utils.book_append_sheet(wb, ws, 'Tracking');
         XLSX.writeFile(wb, `Tracking_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-    } catch(e) { showToast('Export Excel ไม่สำเร็จ: ' + e.message, 'error'); }
+    } catch(e) { 
+        showToast('Export Excel ไม่สำเร็จ: ' + e.message, 'error'); 
+    }
 }
 
 // ================================================================
@@ -1008,11 +1399,18 @@ function exportExcel() {
 function showToast(message, type = 'info') {
     const colors = { success:'bg-green-500', error:'bg-red-500', warning:'bg-yellow-500', info:'bg-blue-500' };
     const icons  = { success:'fa-check-circle', error:'fa-exclamation-circle', warning:'fa-exclamation-triangle', info:'fa-info-circle' };
+    
     const toast = document.createElement('div');
     toast.className = `fixed bottom-4 right-4 ${colors[type]||colors.info} text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-[100] animate-fade-in`;
     toast.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span class="font-medium">${message}</span>`;
     document.body.appendChild(toast);
-    setTimeout(() => { toast.style.opacity='0'; toast.style.transform='translateY(10px)'; toast.style.transition='all 0.3s'; setTimeout(()=>toast.remove(), 300); }, 3500);
+    
+    setTimeout(() => { 
+        toast.style.opacity='0'; 
+        toast.style.transform='translateY(10px)'; 
+        toast.style.transition='all 0.3s'; 
+        setTimeout(()=>toast.remove(), 300); 
+    }, 3500);
 }
 
 // ================================================================
@@ -1020,11 +1418,10 @@ function showToast(message, type = 'info') {
 // ================================================================
 const GAS_CODE = `// ================================================================
 // Tracking Dashboard — Google Apps Script V3
-// วางโค้ดนี้ใน script.google.com → Code.gs แล้ว Deploy เป็น Web App
 // ================================================================
 
 var CONFIG = {
-  sheetId:   "1QZWOH7L9OgRvrBwzoRuseg3tCYWcIoG9D8vMkpRB_DY",   // ← แก้ตรงนี้
+  sheetId:   "1QZWOH7L9OgRvrBwzoRuseg3tCYWcIoG9D8vMkpRB_DY",
   sheetName: "TrackingData",
   headers: [
     "ID","หมายเลขสิ่งของ","รหัสที่ทำการปลายทาง","ผู้ดำเนินการ",
@@ -1095,7 +1492,7 @@ function readData() {
              reason:row[5],lazada:row[6],holdDays:row[7],attempts:row[8],status:row[9],
              type:row[10],photoUrl:row[11],createdAt:row[12],updatedAt:row[13] };
   });
-  return jsonResponse({ result:"success", data:data, total:data.length });
+  return jsonResponse({ result:"success", data, total:data.length });
 }
 
 function updateRow(payload) {
@@ -1179,7 +1576,13 @@ async function copyGASCode() {
         showToast('คัดลอกโค้ด GAS แล้ว! วางใน Code.gs ได้เลย', 'success');
     } catch {
         const pre = document.getElementById('gasCodePreview');
-        if (pre) { const sel = window.getSelection(); const r = document.createRange(); r.selectNodeContents(pre); sel.removeAllRanges(); sel.addRange(r); }
+        if (pre) { 
+            const sel = window.getSelection(); 
+            const r = document.createRange(); 
+            r.selectNodeContents(pre); 
+            sel.removeAllRanges(); 
+            sel.addRange(r); 
+        }
         showToast('เลือกข้อความแล้ว — กด Ctrl+C เพื่อคัดลอก', 'info');
     }
 }
@@ -1197,16 +1600,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     updateSyncStatus();
 
-    // Drop zone
     const dropZone = document.getElementById('dropZone');
     if (dropZone) {
-        dropZone.addEventListener('click', () => document.getElementById('importFile').click());
+        dropZone.addEventListener('click', () => document.getElementById('importFile')?.click());
         dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-blue-500','bg-blue-50'); });
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500','bg-blue-50'));
-        dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('border-blue-500','bg-blue-50'); if (e.dataTransfer.files[0]) handleFileUpload({ target:{ files:e.dataTransfer.files } }); });
+        dropZone.addEventListener('drop', e => { 
+            e.preventDefault(); 
+            dropZone.classList.remove('border-blue-500','bg-blue-50'); 
+            if (e.dataTransfer?.files?.[0]) handleFileUpload({ target:{ files:e.dataTransfer.files } }); 
+        });
     }
 
-    // Auto-load from sheet after short delay
     setTimeout(() => autoLoadFromSheet(), 800);
 });
 </script>
