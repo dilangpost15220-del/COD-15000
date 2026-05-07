@@ -49,9 +49,22 @@
         .photo-thumbnail:hover { transform: scale(1.05); }
         .daily-card { transition: all 0.3s ease; }
         .daily-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15); }
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
+            <p class="text-gray-700 dark:text-gray-300 font-medium">กำลังโหลดข้อมูล...</p>
+        </div>
+    </div>
 
     <div class="flex min-h-screen">
         <!-- Sidebar -->
@@ -70,7 +83,7 @@
                 <a href="#" onclick="showPage('records')" id="nav-records" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-list w-5"></i><span>รายการทั้งหมด</span></a>
                 <a href="#" onclick="showPage('import')" id="nav-import" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-file-import w-5"></i><span>นำเข้าข้อมูล</span></a>
                 <a href="#" onclick="showPage('analytics')" id="nav-analytics" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-chart-pie w-5"></i><span>วิเคราะห์ข้อมูล</span></a>
-                <a href="#" onclick="showPage('settings')" id="nav-settings" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-cog w-5"></i><span>ตั้งค่า</span></a>
+                <a href="#" onclick="requestSettingsAccess()" id="nav-settings" class="sidebar-item flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 font-medium"><i class="fas fa-cog w-5"></i><span>ตั้งค่า <i class="fas fa-lock text-xs opacity-50 ml-1"></i></span></a>
             </nav>
             <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-slate-700">
                 <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition"><i class="fas fa-moon dark:hidden w-5"></i><i class="fas fa-sun hidden dark:block w-5 text-yellow-400"></i><span class="dark:hidden">โหมดกลางคืน</span><span class="hidden dark:block">โหมดกลางวัน</span></button>
@@ -200,8 +213,14 @@
                     </div>
                 </div>
 
-                <!-- Settings Page -->
+                <!-- Settings Page (Protected) -->
                 <div id="page-settings" class="page-section hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-cog text-blue-500"></i> การตั้งค่าระบบ</h2>
+                        <button onclick="lockSettings()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl font-medium transition">
+                            <i class="fas fa-lock"></i> ล็อคการตั้งค่า
+                        </button>
+                    </div>
                     <div class="max-w-3xl mx-auto space-y-6">
                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8">
                             <div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center text-xl"><i class="fas fa-plug"></i></div><div><h3 class="text-xl font-bold">① เชื่อมต่อ Google Apps Script</h3><p class="text-sm text-gray-500 dark:text-gray-400">ตั้งค่า URL สำหรับ sync ข้อมูลกับ Google Sheet</p></div></div>
@@ -213,7 +232,7 @@
                         </div>
 
                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-8">
-                            <div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-gray-900 dark:bg-gray-700 text-white rounded-xl flex items-center justify-center text-xl"><i class="fab fa-github"></i></div><div><h3 class="text-xl font-bold"> อัปโหลดรูปภาพผ่าน GitHub</h3><p class="text-sm text-gray-500 dark:text-gray-400">ฟรี ไม่ต้องล็อกอิน Google Drive — รูปจะถูกเก็บใน GitHub Repository</p></div></div>
+                            <div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 bg-gray-900 dark:bg-gray-700 text-white rounded-xl flex items-center justify-center text-xl"><i class="fab fa-github"></i></div><div><h3 class="text-xl font-bold">② อัปโหลดรูปภาพผ่าน GitHub</h3><p class="text-sm text-gray-500 dark:text-gray-400">ฟรี ไม่ต้องล็อกอิน Google Drive — รูปจะถูกเก็บใน GitHub Repository</p></div></div>
                             <div id="ghStatusBanner" class="hidden mb-4 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium"><i id="ghStatusIcon" class="fas fa-circle"></i><span id="ghStatusMsg"></span></div>
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">GitHub Username</label><input type="text" id="ghUsername" placeholder="เช่น yourname" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repository Name</label><input type="text" id="ghRepo" placeholder="เช่น tracking-photos" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm"></div></div>
@@ -229,7 +248,7 @@
                         </div>
 
                         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
-                            <h4 class="font-bold mb-4 flex items-center gap-2"><i class="fas fa-sync-alt text-emerald-500"></i> ตัวเลือก Sync ข้อมูล</h4>
+                            <h4 class="font-bold mb-4 flex items-center gap-2"><i class="fas fa-sync-alt text-emerald-500"></i>④ ตัวเลือก Sync ข้อมูล</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <button onclick="syncFromSheet()" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl transition text-left"><i class="fas fa-cloud-download-alt text-blue-500 mt-1"></i><div><p class="font-semibold text-sm">ดึงข้อมูลจาก Sheet</p><p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">โหลดข้อมูลล่าสุดจาก Google Sheet มาแสดง</p></div></button>
                                 <button onclick="exportToGoogleSheet('append')" class="flex items-start gap-3 p-4 border border-gray-200 dark:border-slate-600 hover:border-emerald-400 dark:hover:border-emerald-500 rounded-xl transition text-left"><i class="fas fa-cloud-upload-alt text-emerald-500 mt-1"></i><div><p class="font-semibold text-sm">ส่งข้อมูลไป Sheet</p><p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">เพิ่ม/อัปเดตสถานะ (ไม่ลบข้อมูลเก่า)</p></div></button>
@@ -258,7 +277,7 @@
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-lock"></i></div>
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white">🔒 ยืนยันตัวตนผู้ดูแลระบบ</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">กรุณาใส่รหัสผ่านเพื่อดำเนินการลบข้อมูล</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">กรุณาใส่รหัสผ่านเพื่อดำเนินการ</p>
             </div>
             <div class="space-y-4">
                 <input type="password" id="adminPassInput" placeholder="รหัสผ่าน..." class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 focus:ring-2 focus:ring-red-500 outline-none transition text-center text-lg font-mono tracking-widest" onkeypress="if(event.key === 'Enter') confirmActionWithPassword()">
@@ -276,11 +295,12 @@
         let filteredParcels = [];
         let photos = {};
         let charts = {};
-        const API_URL = "https://script.google.com/macros/s/AKfycbx5lZXO4INgL0wMkLI2XABNqNZPBX7iKRv1zl4DVBmQED8WesnSbk1OmljoN8vQ9IV5/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxmmonEF12rRC9_vgbMoWutsK9cAZ4yuUldsVU8SUWN00xwVO5uFFJqh8WAFu9_Rc8L/exec";
 
         // PASSWORD PROTECTION
         const ADMIN_PASSWORD = 'p@ss1234';
         let pendingAction = null;
+        let settingsUnlocked = false;
 
         function requestPassword(actionCallback) {
             pendingAction = actionCallback;
@@ -305,14 +325,101 @@
             } else {
                 const inputEl = document.getElementById('adminPassInput');
                 inputEl.classList.add('border-red-500', 'animate-pulse');
-                showToast(' รหัสผ่านไม่ถูกต้อง', 'error');
+                showToast('❌ รหัสผ่านไม่ถูกต้อง', 'error');
                 setTimeout(() => inputEl.classList.remove('border-red-500', 'animate-pulse'), 500);
+            }
+        }
+
+        function requestSettingsAccess() {
+            if (settingsUnlocked) { showPage('settings'); return; }
+            requestPassword(() => {
+                settingsUnlocked = true;
+                showPage('settings');
+                showToast('🔓 ปลดล็อคการตั้งค่าสำเร็จ', 'success');
+            });
+        }
+
+        function lockSettings() {
+            settingsUnlocked = false;
+            showPage('dashboard');
+            showToast('🔒 ล็อคการตั้งค่าแล้ว', 'info');
+        }
+
+        // ✅ FIXED: AUTO LOAD FROM SHEET AT STARTUP
+        async function autoLoadFromSheet() {
+            const scriptUrl = localStorage.getItem('google_script_url') || API_URL;
+            if (!scriptUrl) {
+                console.log('No script URL configured');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                // Add timestamp to prevent caching
+                const fetchUrl = scriptUrl + '?action=read&t=' + Date.now();
+                
+                const response = await fetch(fetchUrl, { 
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                
+                const result = await response.json();
+                
+                if (result.result === 'success' && result.data && result.data.length > 0) {
+                    // Clear existing data
+                    parcels = [];
+                    photos = {};
+                    
+                    // Map sheet data to app format
+                    parcels = result.data.map(item => ({
+                        id: item.id || Date.now() + Math.random(),
+                        tracking: item.tracking || '',
+                        branch: item.branch || '',
+                        operator: item.operator || '',
+                        datetime: item.datetime || '',
+                        reason: item.reason || '',
+                        lazada: item.lazada || 'N',
+                        holdDays: item.holdDays || '',
+                        attempts: item.attempts || '0',
+                        status: item.status || 'รอ',
+                        type: item.type || 'เปิดเซฟ',
+                        photoUrl: item.photoUrl || ""
+                    }));
+                    
+                    filteredParcels = [...parcels];
+                    
+                    // Update UI
+                    updateStats();
+                    renderRecords();
+                    renderDailySummary();
+                    updateCharts();
+                    
+                    showToast(`✅ โหลดข้อมูลอัตโนมัติสำเร็จ: ${parcels.length} รายการ`, 'success');
+                    console.log('Auto-loaded', parcels.length, 'items from sheet');
+                } else {
+                    console.log('No data in sheet or invalid response');
+                    showToast('ℹ️ Google Sheet ยังไม่มีข้อมูล', 'info');
+                }
+            } catch (err) {
+                console.error('Auto-load from sheet failed:', err);
+                showToast('⚠️ ไม่สามารถโหลดข้อมูลจาก Sheet ได้ (ตรวจสอบการเชื่อมต่อ)', 'warning');
+            } finally {
+                loadingOverlay.classList.add('hidden');
             }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // ✅ เริ่มแอปด้วยข้อมูล 0 รายการ (ไม่โหลด Sample Data)
+            // ✅ เริ่มแอปด้วยข้อมูล 0 รายการ (ชั่วคราว ก่อนโหลด)
             initCharts();
             updateStats();
             renderRecords();
@@ -323,6 +430,11 @@
             injectGASCode();
 
             if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+            // ✅ AUTO SYNC - โหลดข้อมูลทันทีที่เปิดแอป
+            setTimeout(() => {
+                autoLoadFromSheet();
+            }, 500);
 
             const dropZone = document.getElementById('dropZone');
             dropZone.addEventListener('click', () => document.getElementById('importFile').click());
@@ -491,8 +603,7 @@
 // ================================================================
 
 var CONFIG = {
-  sheetId:   "YOUR_GOOGLE_SHEET_ID",   // ← แก้เป็น Sheet ID ของคุณ
-  folderId:  "1acpEDSFlLQALPzsy8pWsec8L0EvGMj0A",   // Drive Folder (สำรอง)
+  sheetId:   "1QZWOH7L9OgRvrBwzoRuseg3tCYWcIoG9D8vMkpRB_DY",   // ← แก้เป็น ID ของ Sheet คุณ
   sheetName: "TrackingData",
   headers: [
     "ID","หมายเลขสิ่งของ","รหัสที่ทำการปลายทาง","ผู้ดำเนินการ",
@@ -563,7 +674,7 @@ function writeData(payload) {
 function readData() {
   var ss    = SpreadsheetApp.openById(CONFIG.sheetId);
   var sheet = ss.getSheetByName(CONFIG.sheetName);
-  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result: "success", data: [], total: 0 });
+  if (!sheet || sheet.getLastRow() <= 1) return jsonResponse({ result: "success",  [], total: 0 });
 
   var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, CONFIG.headers.length).getValues();
   var data = rows.filter(function(r) { return r[1]; }).map(function(row) {
@@ -571,7 +682,7 @@ function readData() {
              reason:row[5],lazada:row[6],holdDays:row[7],attempts:row[8],status:row[9],
              type:row[10],photoUrl:row[11],createdAt:row[12],updatedAt:row[13] };
   });
-  return jsonResponse({ result: "success", data: data, total: data.length });
+  return jsonResponse({ result: "success",  data, total: data.length });
 }
 
 function updateRow(payload) {
@@ -658,11 +769,11 @@ function jsonResponse(obj) {
             Chart.defaults.font.family = 'Sarabun';
             Chart.defaults.color = textColor;
 
-            charts.success = new Chart(document.getElementById('successChart'), { type: 'doughnut', data: { labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, color: textColor } } }, cutout: '70%' } });
-            charts.reason = new Chart(document.getElementById('reasonChart'), { type: 'bar', data: { labels: [], datasets: [{ label: 'จำนวนครั้ง', data: [], backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'], borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } } });
-            charts.operator = new Chart(document.getElementById('operatorChart'), { type: 'bar', data: { labels: [], datasets: [{ label: 'จำนวนรายการ', data: [], backgroundColor: '#6366f1', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { ticks: { maxRotation: 45, minRotation: 45, color: textColor }, grid: { display: false } } } } });
-            charts.trend = new Chart(document.getElementById('trendChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'สำเร็จ', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } } });
-            charts.branch = new Chart(document.getElementById('branchChart'), { type: 'pie', data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } } });
+            charts.success = new Chart(document.getElementById('successChart'), { type: 'doughnut',  { labels: ['สำเร็จ', 'ไม่สำเร็จ', 'รอ'], datasets: [{  [0, 0, 0], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, color: textColor } } }, cutout: '70%' } });
+            charts.reason = new Chart(document.getElementById('reasonChart'), { type: 'bar',  { labels: [], datasets: [{ label: 'จำนวนครั้ง',  [], backgroundColor: ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981'], borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } } });
+            charts.operator = new Chart(document.getElementById('operatorChart'), { type: 'bar',  { labels: [], datasets: [{ label: 'จำนวนรายการ',  [], backgroundColor: '#6366f1', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { ticks: { maxRotation: 45, minRotation: 45, color: textColor }, grid: { display: false } } } } });
+            charts.trend = new Chart(document.getElementById('trendChart'), { type: 'line',  { labels: [], datasets: [{ label: 'สำเร็จ',  [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: textColor } }, x: { grid: { display: false }, ticks: { color: textColor } } } } });
+            charts.branch = new Chart(document.getElementById('branchChart'), { type: 'pie',  { labels: [], datasets: [{  [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: textColor } } } } });
             updateCharts();
         }
 
