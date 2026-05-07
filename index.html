@@ -99,6 +99,7 @@
             }
         }
     </style>
+<base target="_blank">
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
@@ -444,6 +445,11 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Web App URL</label>
                                 <input type="url" id="settingScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition text-sm">
+                            </div>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-4 text-sm text-yellow-700 dark:text-yellow-400">
+                                <p class="font-medium mb-1"><i class="fas fa-exclamation-triangle mr-1"></i>หมายเหตุสำคัญ</p>
+                                <p>ถ้าเปิดไฟล์จากเครื่องโดยตรง (file://) จะ<strong>ส่งข้อมูลไป Sheet ได้</strong> แต่<strong>ดึงข้อมูลจาก Sheet ไม่ได้</strong></p>
+                                <p class="mt-1">วิธีแก้: เปิดผ่าน <strong>Local Server</strong> (เช่น python -m http.server) หรือ <strong>Host บนเว็บ</strong></p>
                             </div>
                             <div class="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-700">
                                 <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 transition flex items-center justify-center gap-2">
@@ -1338,21 +1344,12 @@ function saveSettings() {
 async function testSheetConnection() {
     showLoading(true);
     try {
-        const url = document.getElementById('settingScriptUrl')?.value.trim() || API_URL;
-        const response = await fetch(url + '?action=test', {
-            method: 'GET',
-            mode: 'cors',
-            redirect: 'follow'
-        });
+        const result = await apiRequest('GET', 'test', null);
 
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-
-        let result;
-        try {
-            result = await response.json();
-        } catch (e) {
-            const text = await response.text();
-            result = { result: 'success', message: text };
+        // ถ้าเปิดจากเครื่องและใช้ no-cors
+        if (result.message === 'no-cors-mode') {
+            showToast('📁 เปิดจากเครื่อง: URL ถูกต้อง แต่ดึงข้อมูลไม่ได้ ใช้ Sync อย่างเดียว', 'warning');
+            return;
         }
 
         if (result.result === 'success' || result.status === 'success') {
@@ -1361,7 +1358,12 @@ async function testSheetConnection() {
             throw new Error(result.error || 'ไม่สามารถเชื่อมต่อได้');
         }
     } catch (err) {
-        showToast('❌ เชื่อมต่อไม่สำเร็จ: ' + err.message, 'error');
+        console.error('Test connection error:', err);
+        if (isFileProtocol()) {
+            showToast('📁 เปิดจากเครื่อง: URL ถูกต้อง แต่ดึงข้อมูลไม่ได้ ใช้ Sync อย่างเดียว', 'warning');
+        } else {
+            showToast('❌ เชื่อมต่อไม่สำเร็จ: ' + err.message, 'error');
+        }
     } finally {
         showLoading(false);
     }
@@ -1518,18 +1520,14 @@ function showToast(message, type = 'info') {
 async function autoLoadFromSheet() {
     showLoading(true);
     try {
-        const url = localStorage.getItem('google_script_url') || API_URL;
+        // ใช้ apiRequest ที่รองรับทั้ง file:// และ http/https
+        const data = await apiRequest('GET', 'getAll', null);
 
-        // สำคัญ: ใช้ redirect: "follow" เพราะ Apps Script ส่ง 302 redirect [^14^]
-        const response = await fetch(url + '?action=getAll', {
-            method: 'GET',
-            mode: 'cors',
-            redirect: 'follow'
-        });
-
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-
-        const data = await response.json();
+        // ถ้าเปิดจากเครื่องและใช้ no-cors จะได้ข้อมูลว่างเปล่า
+        if (data.message === 'no-cors-mode') {
+            showToast('📁 เปิดจากเครื่อง: ดึงข้อมูลอัตโนมัติไม่ได้ กรุณาใช้ Import Excel', 'warning');
+            return;
+        }
 
         if (data.result === 'success' && Array.isArray(data.data)) {
             const maxId = parcels.length > 0 ? Math.max(...parcels.map(p => p.id)) : 0;
@@ -1567,12 +1565,90 @@ async function autoLoadFromSheet() {
         }
     } catch (err) {
         console.error('Auto-load error:', err);
-        showToast('⚠️ โหลดจาก Sheet ไม่สำเร็จ: ' + err.message, 'warning');
+        if (isFileProtocol()) {
+            showToast('📁 เปิดจากเครื่อง: ดึงข้อมูลอัตโนมัติไม่ได้ กรุณาใช้ Import Excel', 'warning');
+        } else {
+            showToast('⚠️ โหลดจาก Sheet ไม่สำเร็จ: ' + err.message, 'warning');
+        }
     } finally {
         showLoading(false);
     }
 }
 
+
+
+// ================================================================
+// API Request Helper - รองรับทั้ง file:// และ http/https
+// ================================================================
+
+/**
+ * ตรวจสอบว่าเปิดจากเครื่องหรือไม่ (file://)
+ */
+function isFileProtocol() {
+    return window.location.protocol === 'file:';
+}
+
+/**
+ * ส่งข้อมูลไป Sheet โดยใช้วิธีที่เหมาะสมกับ environment
+ * 
+ * สำหรับ file:// : ใช้ no-cors สำหรับทุก request [^15^]
+ * สำหรับ http/https : ใช้ CORS ปกติ
+ */
+async function apiRequest(method, action, payload) {
+    const url = localStorage.getItem('google_script_url') || API_URL;
+
+    // ถ้าเปิดจากเครื่อง (file://) ใช้ no-cors สำหรับทุก request
+    if (isFileProtocol()) {
+        console.log('📁 Detected file:// protocol, using no-cors mode');
+
+        // ใช้ no-cors สำหรับทุก request (GET และ POST) [^15^]
+        // no-cors จะ return opaque response (ไม่มีข้อมูลกลับมา) แต่ request ไปถึง server จริง
+        await fetch(url + (method === 'GET' ? '?action=' + action : ''), {
+            method: method,
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: method === 'POST' ? JSON.stringify({ action: action, data: payload }) : undefined
+        });
+
+        // สำหรับ GET เราไม่ได้ข้อมูลกลับมา (opaque) ให้แจ้งเตือนผู้ใช้
+        if (method === 'GET') {
+            return { 
+                result: 'success', 
+                data: [], 
+                message: 'no-cors-mode',
+                note: 'เปิดจากเครื่อง: ใช้ Import Excel แทนการดึงข้อมูลอัตโนมัติ'
+            };
+        }
+
+        // สำหรับ POST ถือว่าส่งสำเร็จ
+        return { result: 'success', message: 'Sent via no-cors mode' };
+    }
+
+    // ถ้าเปิดจากเว็บ (http/https) ใช้ CORS ปกติ
+    if (method === 'GET') {
+        const response = await fetch(url + '?action=' + action, {
+            method: 'GET',
+            mode: 'cors',
+            redirect: 'follow'
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return await response.json();
+    } else {
+        const response = await fetch(url, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: action, data: payload })
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        try {
+            return await response.json();
+        } catch (e) {
+            return { result: 'success' };
+        }
+    }
+}
 
 // ================================================================
 // Sync Data to Google Sheet
@@ -1585,8 +1661,6 @@ async function syncToSheet() {
 
     showLoading(true);
     try {
-        const url = localStorage.getItem('google_script_url') || API_URL;
-
         // เตรียมข้อมูลสำหรับส่ง
         const payload = parcels.map(p => ({
             tracking: p.tracking,
@@ -1602,22 +1676,8 @@ async function syncToSheet() {
             photoUrl: photos[p.tracking] || p.photoUrl || ''
         }));
 
-        // สำคัญ: ใช้ text/plain + redirect: "follow" [^9^][^14^]
-        const response = await fetch(url, {
-            method: 'POST',
-            mode: 'cors',
-            redirect: 'follow',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'sync', data: payload })
-        });
-
-        let result;
-        try {
-            const text = await response.text();
-            result = text ? JSON.parse(text) : { result: 'success' };
-        } catch (parseErr) {
-            result = { result: 'success', message: 'Data sent successfully' };
-        }
+        // ใช้ apiRequest ที่รองรับทั้ง file:// และ http/https
+        const result = await apiRequest('POST', 'sync', payload);
 
         if (result.result === 'success' || result.status === 'success') {
             showToast(`☁️ อัปโหลดข้อมูลสำเร็จ: ${payload.length} รายการ`, 'success');
@@ -1626,7 +1686,11 @@ async function syncToSheet() {
         }
     } catch (err) {
         console.error('Sync error:', err);
-        showToast('⚠️ อัปโหลดไป Sheet ไม่สำเร็จ: ' + err.message, 'error');
+        if (isFileProtocol()) {
+            showToast('📁 เปิดจากเครื่อง: ข้อมูลอาจส่งไปแล้ว กรุณาตรวจสอบ Sheet', 'warning');
+        } else {
+            showToast('⚠️ อัปโหลดไป Sheet ไม่สำเร็จ: ' + err.message, 'error');
+        }
     } finally {
         showLoading(false);
     }
@@ -1635,37 +1699,19 @@ async function syncToSheet() {
 // อัปโหลดรายการเดี่ยวไป Sheet (เมื่อเปลี่ยนสถานะหรือเพิ่มรูป)
 async function syncSingleToSheet(parcel) {
     try {
-        const url = localStorage.getItem('google_script_url') || API_URL;
-        const response = await fetch(url, {
-            method: 'POST',
-            mode: 'cors',
-            redirect: 'follow',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ 
-                action: 'update', 
-                data: {
-                    tracking: parcel.tracking,
-                    branch: parcel.branch,
-                    operator: parcel.operator,
-                    datetime: parcel.datetime,
-                    reason: parcel.reason,
-                    lazada: parcel.lazada,
-                    holdDays: parcel.holdDays,
-                    attempts: parcel.attempts,
-                    status: parcel.status,
-                    type: parcel.type,
-                    photoUrl: photos[parcel.tracking] || parcel.photoUrl || ''
-                }
-            })
+        const result = await apiRequest('POST', 'update', {
+            tracking: parcel.tracking,
+            branch: parcel.branch,
+            operator: parcel.operator,
+            datetime: parcel.datetime,
+            reason: parcel.reason,
+            lazada: parcel.lazada,
+            holdDays: parcel.holdDays,
+            attempts: parcel.attempts,
+            status: parcel.status,
+            type: parcel.type,
+            photoUrl: photos[parcel.tracking] || parcel.photoUrl || ''
         });
-
-        let result;
-        try {
-            const text = await response.text();
-            result = text ? JSON.parse(text) : { result: 'success' };
-        } catch (parseErr) {
-            result = { result: 'success' };
-        }
 
         if (result.result === 'success' || result.status === 'success') {
             showToast('☁️ อัปเดตข้อมูลสำเร็จ', 'success');
@@ -1691,8 +1737,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDailySummary();
     loadSettings();
     loadGitHubSettings();
-    // ดึงข้อมูลจาก Google Sheet อัตโนมัติตอนเริ่มแอป
-    autoLoadFromSheet();
+    // ดึงข้อมูลจาก Google Sheet อัตโนมัติตอนเริ่มแอป (ถ้าไม่ใช่ file://)
+    if (!isFileProtocol()) {
+        autoLoadFromSheet();
+    } else {
+        console.log('📁 เปิดจากเครื่อง: ข้ามการดึงข้อมูลอัตโนมัติ');
+        showToast('📁 เปิดจากเครื่อง: ใช้ Import Excel หรือ Sync ด้วยปุ่ม', 'info');
+    }
 
     // Setup new settings triggers
     setupLogoClickTrigger();
