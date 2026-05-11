@@ -3,101 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ติดตาม COD 2-4 วัน — นำเข้าข้อมูล</title>
+  <title>ติดตาม COD 2-4 วัน — ปณ.ในสังกัดลพบุรี</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
-    :root { --bg:#f8f9fa; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8; --success:#16a34a; --warning:#ca8a04; --danger:#dc2626; --text:#1f2937; --border:#e5e7eb; }
+    :root { 
+      --bg:#f8f9fa; --card:#fff; --primary:#2563eb; --primary-hover:#1d4ed8; 
+      --success:#16a34a; --warning:#ca8a04; --danger:#dc2626; --text:#1f2937; 
+      --border:#e5e7eb; --light-blue:#eff6ff;
+    }
     * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; }
     body { background:var(--bg); color:var(--text); padding:20px; line-height:1.5; }
     .container { max-width:1400px; margin:0 auto; }
     header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
     h1 { font-size:1.5rem; color:var(--primary); }
-    .btn { padding:8px 16px; border:none; border-radius:6px; cursor:pointer; font-weight:500; transition:0.2s; font-size:0.9rem; }
+    .btn { padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; transition:all 0.2s; font-size:0.9rem; display:inline-flex; align-items:center; gap:6px; }
     .btn-primary { background:var(--primary); color:#fff; }
-    .btn-primary:hover { background:var(--primary-hover); }
+    .btn-primary:hover { background:var(--primary-hover); transform:translateY(-1px); }
     .btn-success { background:var(--success); color:#fff; }
     .btn-warning { background:var(--warning); color:#fff; }
     .btn-danger { background:var(--danger); color:#fff; }
     .btn-info { background:#0ea5e9; color:#fff; }
-    .btn:disabled { opacity:0.6; cursor:not-allowed; }
-    .upload-zone { border:2px dashed var(--border); border-radius:10px; padding:30px; text-align:center; background:var(--card); margin-bottom:20px; transition:0.3s; cursor:pointer; user-select:none; }
-    .upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:#eff6ff; }
-    .upload-zone p { margin-top:10px; color:#6b7280; font-size:0.9rem; }
-    table { width:100%; border-collapse:collapse; background:var(--card); border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.1); font-size:0.9rem; }
-    th, td { padding:10px 8px; text-align:left; border-bottom:1px solid var(--border); }
-    th { background:#f3f4f6; font-weight:600; color:#4b5563; position:sticky; top:0; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
+    .upload-zone { 
+      border:3px dashed var(--border); border-radius:12px; padding:50px 30px; text-align:center; 
+      background:var(--card); margin-bottom:20px; transition:0.3s; cursor:pointer; user-select:none;
+      background-image: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    }
+    .upload-zone:hover, .upload-zone.dragover { 
+      border-color:var(--primary); background:var(--light-blue);
+      transform:scale(1.01);
+    }
+    .upload-zone p { margin-top:15px; color:#6b7280; font-size:1rem; }
+    .upload-zone .icon { font-size:4rem; margin-bottom:15px; }
+    .upload-zone h3 { color:var(--primary); margin-bottom:10px; }
+    table { width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08); font-size:0.9rem; }
+    th, td { padding:12px 10px; text-align:left; border-bottom:1px solid var(--border); }
+    th { background:#f3f4f6; font-weight:600; color:#4b5563; position:sticky; top:0; z-index:10; }
     tr:hover { background:#f9fafb; }
-    .status-badge { padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:500; display:inline-block; }
+    .status-badge { padding:5px 12px; border-radius:20px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:4px; }
     .status-pending { background:#fef3c7; color:#92400e; }
     .status-success { background:#dcfce7; color:#166534; }
     .status-error { background:#fee2e2; color:#991b1b; }
-    .log-box { background:#111827; color:#10b981; padding:15px; border-radius:6px; margin-top:20px; height:250px; overflow-y:auto; font-family:monospace; font-size:0.8rem; white-space:pre-wrap; }
+    .log-box { background:#1e293b; color:#10b981; padding:15px; border-radius:8px; margin-top:20px; height:250px; overflow-y:auto; font-family:monospace; font-size:0.85rem; white-space:pre-wrap; border:2px solid #334155; }
     .hidden { display:none !important; }
-    .offline-badge { font-size:0.85rem; padding:4px 12px; border-radius:20px; background:#fef3c7; color:#92400e; font-weight:500; }
-    .config-info { background:#eff6ff; padding:12px 15px; border-radius:6px; font-size:0.85rem; color:#1e40af; margin-bottom:15px; border-left:4px solid var(--primary); }
-    .config-info code { background:#dbeafe; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:0.8rem; }
-    .stats-bar { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; }
-    .stat-card { background:var(--card); padding:12px 16px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05); min-width:120px; }
-    .stat-card .label { font-size:0.8rem; color:#6b7280; }
-    .stat-card .value { font-size:1.2rem; font-weight:600; color:var(--text); }
-    .img-preview { width:60px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
-    .img-placeholder { width:60px; height:60px; background:#f3f4f6; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:0.75rem; }
-    .toolbar { display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap; align-items:center; }
+    .badge { font-size:0.85rem; padding:6px 14px; border-radius:20px; font-weight:500; }
+    .badge-offline { background:#fef3c7; color:#92400e; }
+    .stats-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+    .stat-card { 
+      background:var(--card); padding:16px 20px; border-radius:10px; 
+      box-shadow:0 2px 6px rgba(0,0,0,0.06); min-width:140px; flex:1;
+      border-left:4px solid var(--primary);
+    }
+    .stat-card .label { font-size:0.8rem; color:#6b7280; margin-bottom:4px; }
+    .stat-card .value { font-size:1.4rem; font-weight:700; color:var(--text); }
+    .img-preview { width:50px; height:50px; object-fit:cover; border-radius:8px; border:2px solid var(--border); cursor:pointer; transition:0.2s; }
+    .img-preview:hover { transform:scale(1.1); border-color:var(--primary); }
+    .img-placeholder { width:50px; height:50px; background:#f3f4f6; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:0.7rem; }
+    .toolbar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; background:var(--card); padding:15px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
     .search-box { flex:1; min-width:200px; }
-    .search-box input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:0.9rem; }
-    .warning-box { background:#fef3c7; border-left:4px solid #f59e0b; padding:12px 15px; border-radius:6px; margin-bottom:15px; color:#92400e; font-size:0.9rem; }
+    .search-box input { width:100%; padding:10px 14px; border:2px solid var(--border); border-radius:8px; font-size:0.9rem; transition:0.2s; }
+    .search-box input:focus { outline:none; border-color:var(--primary); }
+    .view-switcher { display:flex; background:#e5e7eb; border-radius:10px; padding:4px; width:fit-content; }
+    .view-btn { padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; background:transparent; color:#6b7280; transition:0.2s; }
+    .view-btn.active { background:var(--card); color:var(--primary); box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    
+    /* Progress Bar */
+    .progress-container {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+      display: none;
+      border: 2px solid var(--primary);
+    }
+    .progress-container.active { display: block; animation: slideDown 0.3s ease; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .progress-title { font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
+    .progress-percentage { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+    .progress-bar { height: 14px; background: #e5e7eb; border-radius: 7px; overflow: hidden; position: relative; }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 7px;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .progress-status { margin-top: 12px; font-size: 0.9rem; color: #6b7280; display: flex; justify-content: space-around; }
+    .progress-item { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .progress-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: white; }
+    .progress-icon.success { background: var(--success); }
+    .progress-icon.error { background: var(--danger); }
+    .progress-icon.pending { background: var(--warning); }
+    
+    /* Report Styles */
+    .report-card { background:var(--card); padding:24px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:20px; }
+    .report-card h3 { margin-bottom:16px; color:#4b5563; border-bottom:2px solid var(--border); padding-bottom:12px; font-size:1.1rem; }
+    
     @media(max-width:768px) {
       table, thead, tbody, th, td, tr { display:block; }
       thead tr { position:absolute; top:-9999px; left:-9999px; }
-      tr { margin-bottom:15px; border:1px solid var(--border); padding:10px; border-radius:8px; }
-      td { border:none; position:relative; padding-left:50%; padding-top:5px; padding-bottom:5px; }
-      td:before { content:attr(data-label); position:absolute; left:10px; font-weight:600; color:#6b7280; }
-      .img-preview, .img-placeholder { width:50px; height:50px; }
+      tr { margin-bottom:12px; border:2px solid var(--border); padding:12px; border-radius:10px; background:var(--card); }
+      td { border:none; position:relative; padding-left:45%; padding-top:8px; padding-bottom:8px; }
+      td:before { content:attr(data-label); position:absolute; left:12px; font-weight:700; color:#6b7280; font-size:0.85rem; }
+      .img-preview, .img-placeholder { width:45px; height:45px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📦 Tracking Pro V6 — นำเข้าข้อมูล</h1>
+      <h1>📦 Tracking Pro V6 — ระบบจัดการพัสดุ</h1>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <span class="offline-badge">🔌 โหมดออฟไลน์ (ไม่ดึงข้อมูลจาก Sheet)</span>
+        <span class="badge badge-offline">🔌 โหมดออฟไลน์</span>
+        <div class="view-switcher">
+          <button class="view-btn active" id="btnViewTable" onclick="switchView('table')">📋 ตาราง</button>
+          <button class="view-btn" id="btnViewReport" onclick="switchView('report')">📊 รายงาน</button>
+        </div>
       </div>
     </header>
 
-    <div class="warning-box">
-      ⚠️ <strong>คำเตือน:</strong> ระบบทำงานในโหมดออฟไลน์ <strong>ไม่มีการดึงข้อมูลจาก Google Sheet</strong> ข้อมูลทั้งหมดอยู่ที่เครื่องนี้เท่านั้น 
-      กรุณา Export JSON เก็บไว้เป็นสำรอง มิฉะนั้นข้อมูลจะหายเมื่อเคลียร์เบราว์เซอร์
-    </div>
-
     <div class="upload-zone" id="dropZone">
-      <div style="font-size:2.5rem;">📁</div>
+      <div class="icon">📁</div>
       <h3>ลากไฟล์ Excel/CSV มาวางที่นี่ หรือคลิกเพื่อเลือก</h3>
       <p>รองรับ .xlsx, .xls, .csv | ระบบอ่านคอลัมน์อัตโนมัติ</p>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
     </div>
 
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-header">
+        <div class="progress-title">
+          <span>📤</span>
+          <span id="progressTitle">กำลังอัปโหลด...</span>
+        </div>
+        <div class="progress-percentage" id="progressPercentage">0%</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="progress-status">
+        <div class="progress-item"><div class="progress-icon success">✓</div><span>สำเร็จ: <strong id="progressSuccess">0</strong></span></div>
+        <div class="progress-item"><div class="progress-icon error">✗</div><span>ผิดพลาด: <strong id="progressError">0</strong></span></div>
+        <div class="progress-item"><div class="progress-icon pending">⏳</div><span>รออยู่: <strong id="progressPending">0</strong></span></div>
+      </div>
+    </div>
+
     <div class="stats-bar">
-      <div class="stat-card"><div class="label">⏳ รออัปโหลด</div><div class="value" id="countPending" style="color:var(--warning);">0</div></div>
-      <div class="stat-card"><div class="label">✅ อัปโหลดแล้ว</div><div class="value" id="countSuccess" style="color:var(--success);">0</div></div>
-      <div class="stat-card"><div class="label">❌ ไม่สำเร็จ</div><div class="value" id="countError" style="color:var(--danger);">0</div></div>
-      <div class="stat-card"><div class="label">📷 มีรูปภาพ</div><div class="value" id="countWithImage">0</div></div>
-      <div class="stat-card"><div class="label"> รวมทั้งหมด</div><div class="value" id="countTotal">0</div></div>
+      <div class="stat-card" style="border-left-color:var(--warning);"><div class="label">⏳ รออัปโหลด</div><div class="value" id="countPending" style="color:var(--warning);">0</div></div>
+      <div class="stat-card" style="border-left-color:var(--success);"><div class="label">✅ อัปโหลดแล้ว</div><div class="value" id="countSuccess" style="color:var(--success);">0</div></div>
+      <div class="stat-card" style="border-left-color:var(--danger);"><div class="label">❌ ไม่สำเร็จ</div><div class="value" id="countError" style="color:var(--danger);">0</div></div>
+      <div class="stat-card" style="border-left-color:#0ea5e9;"><div class="label">📸 มีรูปภาพ</div><div class="value" id="countWithImage">0</div></div>
+      <div class="stat-card"><div class="label">📊 รวมทั้งหมด</div><div class="value" id="countTotal">0</div></div>
     </div>
 
     <div class="toolbar">
       <button class="btn btn-primary" id="btnUploadAll" onclick="uploadBatch()" disabled>📤 อัปโหลดที่รอไป Sheet</button>
       <button class="btn btn-warning" onclick="clearPendingOnly()">🗑️ เคลียร์เฉพาะที่รอ</button>
       <button class="btn btn-danger" onclick="clearAllData()">🚫 เคลียร์ทั้งหมด</button>
-      <button class="btn btn-info" onclick="exportPending()">📥 Export JSON</button>
-      <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="restoreData(this)">
+      <button class="btn btn-info" onclick="exportData()">📥 Export JSON</button>
+      <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="restoreFromJson(this)">
       <button class="btn btn-success" onclick="document.getElementById('restoreFile').click()">📤 Import JSON</button>
       <div class="search-box">
-        <input type="text" id="searchInput" placeholder="🔍 ค้นหาหมายเลขสิ่งของ..." oninput="filterTable()">
+        <input type="text" id="searchInput" placeholder="🔍 ค้นหา..." oninput="filterTable()">
       </div>
     </div>
 
-    <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
+    <!-- Table View -->
+    <div id="tableView" style="overflow-x:auto; max-height:650px; overflow-y:auto; margin-bottom:20px; border-radius:10px;">
       <table id="dataTable">
         <thead>
           <tr>
@@ -114,10 +197,35 @@
             <th>จัดการ</th>
           </tr>
         </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="11" style="text-align:center;padding:30px;color:#6b7280;">ยังไม่มีข้อมูล — กรุณาอัปโหลดไฟล์ Excel/CSV</td></tr>
-        </tbody>
+        <tbody id="tableBody"></tbody>
       </table>
+    </div>
+
+    <!-- Report View -->
+    <div id="reportView" class="hidden">
+      <div class="stats-bar" style="margin-bottom:20px;">
+        <div class="stat-card"><div class="label">📦 ยอดสรุปชิ้นงานทั้งหมด</div><div class="value" id="dashTotal">0</div></div>
+        <div class="stat-card" style="border-left-color:var(--success);"><div class="label">📸 มีภาพถ่าย</div><div class="value" id="dashWithPhoto" style="color:var(--success);">0</div></div>
+        <div class="stat-card" style="border-left-color:var(--danger);"><div class="label">🚫 ไม่มีภาพถ่าย</div><div class="value" id="dashWithoutPhoto" style="color:var(--danger);">0</div></div>
+      </div>
+      <div class="report-card">
+        <h3>📅 รายงานประจำวัน แยกตาม ปณ.</h3>
+        <div style="overflow-x:auto;">
+          <table id="reportTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:12px; text-align:left;">วันที่</th>
+                <th style="padding:12px; text-align:left;">รหัส ปณ.</th>
+                <th style="padding:12px; text-align:center;">ชิ้นงานทั้งหมด</th>
+                <th style="padding:12px; text-align:center;">มีภาพถ่าย</th>
+                <th style="padding:12px; text-align:center;">ไม่มีภาพถ่าย</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody"></tbody>
+            <tfoot id="reportFoot" style="background:var(--light-blue); font-weight:bold;"></tfoot>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -129,24 +237,20 @@
   </div>
 
   <script>
-    if (typeof XLSX === 'undefined') {
-      document.body.innerHTML = '<h2 style="color:red;text-align:center;margin-top:50px;">❌ ไม่สามารถโหลดไลบรารี XLSX ได้<br>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้าเว็บ</h2>';
-      throw new Error('XLSX not loaded');
-    }
-
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4RtXPG2ktw8XpbOmYmI1uKq7hBpo6E69DIbYfrbtWNASdoEBqlaWHYCXAv7hvcSv8/exec';
-    const DRIVE_FOLDER_ID = '1Axx6dXHQ1jz4qH0OfpXjQZ0Azy6lcHus';
-    
+    // === GLOBAL VARIABLES ===
     let importData = [];
-    let config = { webAppUrl: WEB_APP_URL, driveFolderId: DRIVE_FOLDER_ID };
     let successCount = 0, errorCount = 0;
     let debugVisible = true;
+    let currentView = 'table';
+    
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx4RtXPG2ktw8XpbOmYmI1uKq7hBpo6E69DIbYfrbtWNASdoEBqlaWHYCXAv7hvcSv8/exec';
+    const DRIVE_FOLDER_ID = '1Axx6dXHQ1jz4qH0OfpXjQZ0Azy6lcHus';
+    const config = { webAppUrl: WEB_APP_URL, driveFolderId: DRIVE_FOLDER_ID };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      log('✅ ระบบพร้อมใช้งาน (โหมดออฟไลน์)');
-      log('⚠️ ห้ามดึงข้อมูลจาก Sheet - ทำงานเฉพาะข้อมูลในเครื่อง');
-      log(`🔗 Web App: ${WEB_APP_URL.substring(0, 60)}... (สำหรับอัปโหลดเท่านั้น)`);
-      log(`📁 Drive Folder: ${DRIVE_FOLDER_ID} (สำหรับอัปโหลดรูป)`);
+    // === INITIALIZATION ===
+    window.addEventListener('load', function() {
+      log('🚀 ระบบ Tracking Pro V6 พร้อมใช้งาน');
+      log('✅ XLSX Library: ' + (typeof XLSX !== 'undefined' ? 'โหลดสำเร็จ' : 'ไม่พบ'));
       initEventListeners();
       loadFromStorage();
     });
@@ -154,14 +258,44 @@
     function initEventListeners() {
       const dropZone = document.getElementById('dropZone');
       const fileInput = document.getElementById('fileInput');
-      if (!dropZone || !fileInput) return;
+      
+      dropZone.addEventListener('click', function() { fileInput.click(); });
+      
+      dropZone.addEventListener('dragover', function(e) { 
+        e.preventDefault(); 
+        dropZone.classList.add('dragover'); 
+      });
+      
+      dropZone.addEventListener('dragleave', function() {
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', function(e) { 
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+          handleFiles(e.dataTransfer.files);
+        }
+      });
+      
+      fileInput.addEventListener('change', function(e) { 
+        if (e.target.files.length > 0) {
+          handleFiles(e.target.files);
+        }
+        e.target.value = '';
+      });
+      
+      log('✅ ระบบพร้อม — สามารถอัปโหลดไฟล์ได้แล้ว');
+    }
 
-      dropZone.addEventListener('click', () => fileInput.click());
-      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-      dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
-      fileInput.addEventListener('change', e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ''; });
-      log('🔧 Event Listeners ติดตั้งเรียบร้อยแล้ว');
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('tableView').classList.toggle('hidden', view !== 'table');
+      document.getElementById('reportView').classList.toggle('hidden', view !== 'report');
+      document.getElementById('btnViewTable').classList.toggle('active', view === 'table');
+      document.getElementById('btnViewReport').classList.toggle('active', view === 'report');
+      
+      if (view === 'report') renderDailyReport();
     }
 
     function toggleDebug() {
@@ -176,6 +310,7 @@
       });
     }
 
+    // === HELPER FUNCTIONS ===
     function parseNumericValue(val) {
       if (!val && val !== 0) return 0;
       if (typeof val === 'number') return val;
@@ -183,109 +318,141 @@
       return match ? parseInt(match[1]) : 0;
     }
 
-    // ✅ แก้ไขแล้ว: รักษาตัวอักษรไทย และตัดเฉพาะช่องว่าง
-    function findKeyByPattern(obj, patterns) {
-      if (!obj) return undefined;
-      const objKeys = Object.keys(obj);
-      for (const pattern of patterns) {
-        const normPattern = pattern.toLowerCase().replace(/\s+/g, '');
-        const found = objKeys.find(key => {
-          const normKey = key.toLowerCase().replace(/\s+/g, '');
-          return normKey.includes(normPattern);
-        });
-        if (found) return obj[found];
-      }
-      return undefined;
-    }
-
+    // === FILE HANDLING ===
     function handleFiles(files) {
       if (!files.length) return;
       const file = files[0];
+      log('📄 กำลังอ่านไฟล์: ' + file.name);
+      
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = function(e) {
         try {
-          log(` กำลังอ่านไฟล์: ${file.name}`);
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '', raw: false });
           
-          if (!jsonData.length) { alert('ไฟล์ว่างเปล่า'); return; }
-          if (jsonData[0]) log(`📋 พบคอลัมน์: ${Object.keys(jsonData[0]).join(', ')}`, 'info');
-          
+          log('✅ พบ ' + jsonData.length + ' รายการ');
+          if (jsonData[0]) {
+            log('📋 คอลัมน์ที่พบ: ' + Object.keys(jsonData[0]).join(', '));
+          }
           parseImportData(jsonData);
-          log(`✅ โหลดไฟล์สำเร็จ: ${jsonData.length} รายการ`);
+          switchView('table');
         } catch (err) {
-          log(`❌ อ่านไฟล์ไม่สำเร็จ: ${err.message}`, 'error');
-          alert(`อ่านไฟล์ไม่สำเร็จ: ${err.message}`);
+          log('❌ Error: ' + err.message);
+          alert('อ่านไฟล์ไม่สำเร็จ: ' + err.message);
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
     function parseImportData(raw) {
+      log('🔄 เริ่มประมวลผล ' + raw.length + ' รายการ...');
+      
       const newItems = raw.map((row, i) => {
-        let datetime = findKeyByPattern(row, ['วันที่ เวลา (สแกนผลการนำจ่ายล่าสุด)', 'datetime', 'วันที่/เวลา', 'DateTime']) || new Date();
-        if (typeof datetime === 'string') {
-          // แปลง DD/MM/YYYY HH:mm ให้ JS อ่านออก
-          const parts = datetime.split(' ');
-          const dateParts = parts[0].split('/');
-          if (dateParts.length === 3) {
-            datetime = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}${parts[1] ? ' ' + parts[1] : ''}`;
+        try {
+          // ✅ อ่านข้อมูลตามชื่อคอลัมน์ในไฟล์ Excel จริง
+          const id = row['ลำดับ'] || (i + 1);
+          const tracking = row['หมายเลขสิ่งของ'] || '';
+          const branch = row['รหัสที่ทำการปลายทาง'] || '';
+          const operator = row['ผู้ดำเนินการ'] || '';
+          const datetimeRaw = row['วันที่ เวลา (สแกนผลการนำจ่ายล่าสุด)'] || '';
+          const reason = row['สาเหตุ'] || '';
+          const lazada = row['Lazada?'] || '';
+          const holdDaysFromReceive = row['จำนวนวันที่ถือครอง (นับจากวันที่รับฝาก)'] || '';
+          const holdDaysFromDest = row['จำนวนวันที่ถือครอง (นับจากวันที่ปลายทาง)'] || '';
+          const attemptsRaw = row['จำนวนครั้งที่พยายามนำจ่าย'] || '';
+          
+          if (!tracking) return null;
+          
+          // แปลงวันที่ "09/05/2026 10:34"
+          let datetime = new Date();
+          if (datetimeRaw) {
+            const parts = datetimeRaw.split(' ');
+            const dateParts = parts[0].split('/');
+            if (dateParts.length === 3) {
+              const dateStr = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0] + (parts[1] ? ' ' + parts[1] : '');
+              datetime = new Date(dateStr);
+            }
           }
-          datetime = new Date(datetime);
+          
+          // แปลง "6 Day" → 6, "3 ครั้ง" → 3
+          const holdDays = parseNumericValue(holdDaysFromDest) || parseNumericValue(holdDaysFromReceive);
+          const attempts = parseNumericValue(attemptsRaw);
+          
+          log('✅ แถวที่ ' + (i+1) + ': ' + tracking + ' | ' + branch + ' | ' + operator + ' | ถือครอง: ' + holdDays + ' | พยายาม: ' + attempts);
+          
+          return {
+            id: id,
+            tracking: tracking.toString().trim(),
+            branch: branch.toString().trim(),
+            operator: operator.toString().trim(),
+            datetime: datetime.toISOString(),
+            reason: reason.toString().trim(),
+            status: 'รอ',
+            lazada: lazada.toString().trim(),
+            holdDays: holdDays,
+            attempts: attempts,
+            photoUrl: '', 
+            driveFileId: '', 
+            image: null, 
+            uploadStatus: 'pending'
+          };
+        } catch (err) {
+          log('❌ Error parsing row ' + (i+1) + ': ' + err.message);
+          return null;
         }
-        if (!(datetime instanceof Date) || isNaN(datetime)) datetime = new Date();
-        
-        return {
-          id: findKeyByPattern(row, ['ลำดับ', 'id', 'ID']) || (importData.length + i + 1),
-          tracking: findKeyByPattern(row, ['หมายเลขสิ่งของ', 'tracking', 'TrackingNumber']) || '',
-          branch: findKeyByPattern(row, ['รหัสที่ทำการปลายทาง', 'รหัส ปณ.', 'branch', 'PostCode']) || '',
-          operator: findKeyByPattern(row, ['ผู้ดำเนินการ', 'operator', 'User']) || '',
-          datetime: datetime.toISOString(),
-          reason: findKeyByPattern(row, ['สาเหตุ', 'reason', 'หมายเหตุ']) || '',
-          status: 'รอ',
-          lazada: findKeyByPattern(row, ['Lazada?', 'lazada', 'Lazada']) || '',
-          holdDays: parseNumericValue(findKeyByPattern(row, ['จำนวนวันที่ถือครอง (นับจากวันที่ปลายทาง)', 'จำนวนวันที่ถือครอง', 'holdDays'])),
-          attempts: parseNumericValue(findKeyByPattern(row, ['จำนวนครั้งที่พยายามนำจ่าย', 'จำนวนครั้งที่พยายาม', 'attempts'])),
-          photoUrl: '', driveFileId: '', updatedAt: new Date().toISOString(),
-          image: null, raw: row, uploadStatus: 'pending'
-        };
-      }).filter(d => d.tracking && d.tracking.toString().trim() !== '');
+      }).filter(item => item !== null);
       
       importData = importData.concat(newItems);
-      renderTable(); updateCounters(); saveToLocal();
-      log(`✅ เพิ่มข้อมูลใหม่ ${newItems.length} รายการ (รวมทั้งหมด ${importData.length})`);
+      renderTable(); 
+      updateCounters(); 
+      saveToLocal();
+      log('✅ เพิ่มข้อมูล ' + newItems.length + ' รายการ สำเร็จ');
     }
 
+    // === RENDER FUNCTIONS ===
     function renderTable() {
       const tbody = document.getElementById('tableBody');
       const keyword = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      
       if (!importData.length) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#6b7280;">ยังไม่มีข้อมูล</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:40px;color:#6b7280;">📂 ยังไม่มีข้อมูล — กรุณาอัปโหลดไฟล์ Excel</td></tr>';
         return;
       }
+      
       const filtered = importData.filter(d => !keyword || (d.tracking + d.branch + d.operator + d.reason).toLowerCase().includes(keyword));
+      
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:#6b7280;">ไม่พบข้อมูลที่ค้นหา</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:#6b7280;">🔍 ไม่พบข้อมูลที่ค้นหา</td></tr>';
         return;
       }
+      
       tbody.innerHTML = filtered.map((d, idx) => {
         const originalIdx = importData.indexOf(d);
-        return `<tr style="${d.uploadStatus === 'error' ? 'background:#fef2f2;' : ''}">
-          <td data-label="#">${d.id}</td>
-          <td data-label="หมายเลขสิ่งของ"><strong>${d.tracking}</strong></td>
-          <td data-label="รหัส ปณ.">${d.branch || '-'}</td>
-          <td data-label="ผู้ดำเนินการ">${d.operator || '-'}</td>
-          <td data-label="วันที่/เวลา">${formatDateTime(d.datetime)}</td>
-          <td data-label="ถือครอง (วัน)">${d.holdDays}</td>
-          <td data-label="พยายาม (ครั้ง)">${d.attempts}</td>
-          <td data-label="สาเหตุ">${d.reason || '-'}</td>
-          <td data-label="รูปภาพ">${d.image ? `<img src="${d.image}" class="img-preview" onclick="viewImage('${d.image}')">` : '<div class="img-placeholder">ยังไม่มีรูป</div>'}</td>
-          <td data-label="สถานะ"><span class="status-badge status-${d.uploadStatus}">${d.uploadStatus === 'success' ? '✅ สำเร็จ' : d.uploadStatus === 'error' ? '❌ ไม่สำเร็จ' : '⏳ รอ'}</span></td>
-          <td data-label="จัดการ">
-            <button class="btn btn-warning" style="padding:4px 8px;font-size:0.75rem;" onclick="triggerUpload(${originalIdx})">📷</button>
-            ${d.uploadStatus === 'success' ? '' : `<button class="btn btn-danger" style="padding:4px 8px;font-size:0.75rem;margin-left:3px;" onclick="removeItem(${originalIdx})">🗑️</button>`}
+        return `<tr>
+          <td><strong>${d.id}</strong></td>
+          <td><strong style="color:#2563eb;">${d.tracking}</strong></td>
+          <td>${d.branch}</td>
+          <td>${d.operator || '-'}</td>
+          <td>${formatDateTime(d.datetime)}</td>
+          <td><span style="background:#fef3c7;padding:4px 8px;border-radius:4px;font-weight:600;">${d.holdDays}</span></td>
+          <td><span style="background:#dbeafe;padding:4px 8px;border-radius:4px;font-weight:600;">${d.attempts}</span></td>
+          <td>${d.reason || '-'}</td>
+          <td>
+            ${d.image 
+              ? `<img src="${d.image}" class="img-preview" onclick="viewImage('${d.image}')" title="คลิกเพื่อดูรูป">` 
+              : '<div class="img-placeholder" title="ยังไม่มีรูปภาพ">ยังไม่มีรูป</div>'
+            }
+          </td>
+          <td>
+            <span class="status-badge status-${d.uploadStatus}">
+              ${d.uploadStatus === 'success' ? '✅ สำเร็จ' : d.uploadStatus === 'error' ? '❌ ไม่สำเร็จ' : '⏳ รอ'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-warning" style="padding:6px 10px;font-size:0.8rem;" onclick="triggerUpload(${originalIdx})" title="แนบรูปภาพ">📷</button>
+            ${d.uploadStatus === 'success' ? '' : `<button class="btn btn-danger" style="padding:6px 10px;font-size:0.8rem;margin-left:5px;" onclick="removeItem(${originalIdx})" title="ลบรายการ">🗑️</button>`}
           </td>
         </tr>`;
       }).join('');
@@ -294,7 +461,7 @@
     function formatDateTime(iso) {
       if (!iso) return '-';
       const d = new Date(iso);
-      return isNaN(d) ? iso : d.toLocaleString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return d.toLocaleString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
     }
 
     function updateCounters() {
@@ -307,96 +474,240 @@
       document.getElementById('btnUploadAll').disabled = pending === 0;
     }
 
+    // === ACTION FUNCTIONS ===
     function triggerUpload(index) {
       const input = document.createElement('input');
-      input.type = 'file'; input.accept = 'image/*';
-      input.onchange = e => {
+      input.type = 'file'; 
+      input.accept = 'image/*';
+      input.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = ev => {
+        reader.onload = function(ev) {
           importData[index].image = ev.target.result;
           importData[index].uploadStatus = 'pending';
-          renderTable(); updateCounters(); saveToLocal();
-          log(`📷 แนบรูปภาพ: ${file.name} → ${importData[index].tracking}`);
+          renderTable(); 
+          updateCounters(); 
+          saveToLocal();
+          log('📷 แนบรูปภาพ: ' + file.name);
         };
         reader.readAsDataURL(file);
       };
       input.click();
     }
 
-    function viewImage(src) { window.open(src, '_blank'); }
+    function viewImage(src) { 
+      window.open(src, '_blank'); 
+    }
+    
     function removeItem(index) {
-      if (confirm(`ลบรายการ "${importData[index].tracking}"?`)) {
+      if (confirm('🗑️ ลบรายการ "' + importData[index].tracking + '"?')) {
         if (importData[index].uploadStatus === 'success') successCount--;
         if (importData[index].uploadStatus === 'error') errorCount--;
         importData.splice(index, 1);
-        renderTable(); updateCounters(); saveToLocal();
+        renderTable(); 
+        updateCounters(); 
+        saveToLocal();
+        if(currentView === 'report') renderDailyReport();
+        log('🗑️ ลบรายการเรียบร้อย');
       }
     }
 
     function clearPendingOnly() {
       const pending = importData.filter(d => d.uploadStatus === 'pending');
-      if (!pending.length) return alert('ไม่มีรายการที่รออัปโหลด');
-      if (confirm(`เคลียร์ ${pending.length} รายการที่ยังไม่อัปโหลด? (ข้อมูลสำเร็จจะยังอยู่)`)) {
+      if (!pending.length) return alert('ℹ️ ไม่มีรายการที่รออัปโหลด');
+      if (confirm('⚠️ เคลียร์ ' + pending.length + ' รายการที่ยังไม่อัปโหลด?')) {
         importData = importData.filter(d => d.uploadStatus === 'success');
-        renderTable(); updateCounters(); saveToLocal();
-        log('🗑️ เคลียร์รายการที่รอเรียบร้อย', 'warn');
+        renderTable(); 
+        updateCounters(); 
+        saveToLocal();
+        if(currentView === 'report') renderDailyReport();
+        log('🗑️ เคลียร์รายการที่รอเรียบร้อย');
       }
     }
 
     function clearAllData() {
-      if (!importData.length) return alert('ไม่มีข้อมูล');
-      if (confirm(`ลบทั้งหมด ${importData.length} รายการ?`) && confirm('⚠️ ยืนยันอีกครั้ง: ลบถาวร')) {
-        importData = []; successCount = 0; errorCount = 0;
-        renderTable(); updateCounters(); saveToLocal();
-        log('🗑️ เคลียร์ทั้งหมดเรียบร้อย', 'warn');
+      if (!importData.length) return alert('ℹ️ ไม่มีข้อมูล');
+      if (confirm('🚨 ลบทั้งหมด ' + importData.length + ' รายการ?') && confirm('⚠️ ยืนยันอีกครั้ง?')) {
+        importData = []; 
+        successCount = 0; 
+        errorCount = 0;
+        renderTable(); 
+        updateCounters(); 
+        saveToLocal();
+        if(currentView === 'report') renderDailyReport();
+        log('🗑️ เคลียร์ทั้งหมดเรียบร้อย');
       }
     }
 
+    // === REPORT FUNCTIONS ===
+    function renderDailyReport() {
+      const tbody = document.getElementById('reportBody');
+      const tfoot = document.getElementById('reportFoot');
+      
+      if (!importData.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">📂 ยังไม่มีข้อมูล</td></tr>';
+        tfoot.innerHTML = '';
+        document.getElementById('dashTotal').textContent = '0';
+        document.getElementById('dashWithPhoto').textContent = '0';
+        document.getElementById('dashWithoutPhoto').textContent = '0';
+        return;
+      }
+
+      const grouped = {};
+      importData.forEach(item => {
+        const date = new Date(item.datetime).toLocaleDateString('th-TH');
+        const po = item.branch || 'ไม่ระบุ';
+        if (!grouped[date]) grouped[date] = {};
+        if (!grouped[date][po]) grouped[date][po] = { total: 0, withPhoto: 0, withoutPhoto: 0 };
+        grouped[date][po].total++;
+        if (item.image) grouped[date][po].withPhoto++; else grouped[date][po].withoutPhoto++;
+      });
+
+      let html = '';
+      let grandTotal = 0, grandWith = 0, grandWithout = 0;
+      
+      const sortedDates = Object.keys(grouped).sort((a, b) => {
+        return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-'));
+      });
+
+      sortedDates.forEach(date => {
+        const pos = Object.keys(grouped[date]);
+        pos.forEach((po, idx) => {
+          const d = grouped[date][po];
+          grandTotal += d.total;
+          grandWith += d.withPhoto;
+          grandWithout += d.withoutPhoto;
+          html += `<tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:10px; ${idx === 0 ? 'font-weight:600; color:var(--primary);' : ''}">${idx === 0 ? date : ''}</td>
+            <td style="padding:10px;">${po}</td>
+            <td style="padding:10px; text-align:center; font-weight:600;">${d.total}</td>
+            <td style="padding:10px; text-align:center; color:var(--success); font-weight:600;">${d.withPhoto}</td>
+            <td style="padding:10px; text-align:center; color:var(--danger); font-weight:600;">${d.withoutPhoto}</td>
+          </tr>`;
+        });
+      });
+
+      tbody.innerHTML = html;
+      tfoot.innerHTML = `<tr>
+        <td colspan="2" style="padding:12px; text-align:right; font-size:1.1rem;">📊 ยอดสรุปทั้งหมด</td>
+        <td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--primary);">${grandTotal}</td>
+        <td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--success);">${grandWith}</td>
+        <td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--danger);">${grandWithout}</td>
+      </tr>`;
+
+      document.getElementById('dashTotal').textContent = grandTotal;
+      document.getElementById('dashWithPhoto').textContent = grandWith;
+      document.getElementById('dashWithoutPhoto').textContent = grandWithout;
+    }
+
+    // === PROGRESS BAR ===
+    function updateProgress(current, total, success, error) {
+      const percentage = Math.round((current / total) * 100);
+      document.getElementById('progressFill').style.width = percentage + '%';
+      document.getElementById('progressPercentage').textContent = percentage + '%';
+      document.getElementById('progressSuccess').textContent = success;
+      document.getElementById('progressError').textContent = error;
+      document.getElementById('progressPending').textContent = total - current;
+    }
+
+    function showProgress(show) {
+      const container = document.getElementById('progressContainer');
+      if (show) {
+        container.classList.add('active');
+        updateProgress(0, importData.filter(d => d.uploadStatus === 'pending').length, 0, 0);
+      } else {
+        setTimeout(() => container.classList.remove('active'), 2000);
+      }
+    }
+
+    // === UPLOAD FUNCTIONS ===
     async function uploadBatch() {
       const pending = importData.filter(d => d.uploadStatus === 'pending');
-      if (!pending.length) return alert('ไม่มีรายการรออัปโหลด');
-      if (!confirm(`อัปโหลด ${pending.length} รายการไป Sheet?`)) return;
+      if (!pending.length) return alert('ℹ️ ไม่มีรายการรออัปโหลด');
+      if (!confirm(' ยืนยันอัปโหลด ' + pending.length + ' รายการ?')) return;
 
       document.getElementById('btnUploadAll').disabled = true;
-      document.getElementById('btnUploadAll').textContent = '⏳ กำลังอัปโหลด...';
+      document.getElementById('btnUploadAll').innerHTML = '⏳ กำลังอัปโหลด...';
+      
+      showProgress(true);
+      log('🚀 เริ่มอัปโหลด ' + pending.length + ' รายการ');
+      
+      let currentSuccess = 0;
+      let currentError = 0;
       
       for (let i = 0; i < pending.length; i++) {
         const item = pending[i];
         try {
           let photoUrl = '', driveFileId = '';
           if (item.image) {
-            log(`📷 อัปโหลดรูป: ${item.tracking}`);
+            log('📷 อัปโหลดรูป: ' + item.tracking);
             const res = await uploadPhotoToDrive(item);
-            photoUrl = res.url || ''; driveFileId = res.fileId || '';
+            photoUrl = res.url || ''; 
+            driveFileId = res.fileId || '';
           }
           const sheetData = {
-            id: item.id, tracking: item.tracking, branch: item.branch, operator: item.operator,
-            datetime: item.datetime, reason: item.reason, status: 'สำเร็จ', lazada: item.lazada,
-            holdDays: item.holdDays, attempts: item.attempts, photoUrl, driveFileId,
+            id: item.id, 
+            tracking: item.tracking, 
+            branch: item.branch, 
+            operator: item.operator,
+            datetime: item.datetime, 
+            reason: item.reason, 
+            status: 'สำเร็จ', 
+            lazada: item.lazada,
+            holdDays: item.holdDays, 
+            attempts: item.attempts, 
+            photoUrl, 
+            driveFileId,
             updatedAt: new Date().toISOString()
           };
           await saveToSheet(sheetData);
-          item.uploadStatus = 'success'; item.photoUrl = photoUrl; item.driveFileId = driveFileId;
-          successCount++; log(`✅ สำเร็จ: ${item.tracking}`);
+          item.uploadStatus = 'success'; 
+          item.photoUrl = photoUrl; 
+          item.driveFileId = driveFileId;
+          successCount++; 
+          currentSuccess++;
+          log('✅ สำเร็จ: ' + item.tracking);
         } catch (err) {
-          item.uploadStatus = 'error'; errorCount++;
-          log(` ล้มเหลว: ${item.tracking} | ${err.message}`, 'error');
+          item.uploadStatus = 'error'; 
+          errorCount++;
+          currentError++;
+          log('❌ ล้มเหลว: ' + item.tracking + ' | ' + err.message);
         }
-        renderTable(); updateCounters();
+        
+        updateProgress(i + 1, pending.length, currentSuccess, currentError);
+        renderTable(); 
+        updateCounters();
       }
-      document.getElementById('btnUploadAll').textContent = '📤 อัปโหลดที่รอไป Sheet';
+      
+      document.getElementById('btnUploadAll').innerHTML = '📤 อัปโหลดที่รอไป Sheet';
+      document.getElementById('btnUploadAll').disabled = false;
       saveToLocal();
-      alert(errorCount === 0 ? `✅ สำเร็จ ${successCount} รายการ` : `⚠️ สำเร็จ ${successCount} | ไม่สำเร็จ ${errorCount}`);
+      if(currentView === 'report') renderDailyReport();
+      
+      const msg = currentError === 0 ? '✅ อัปโหลดสำเร็จทั้งหมด ' + currentSuccess + ' รายการ!' : '⚠️ สำเร็จ ' + currentSuccess + ' | ไม่สำเร็จ ' + currentError;
+      
+      setTimeout(() => {
+        showProgress(false);
+        alert(msg);
+        log('🏁 ' + msg);
+      }, 1000);
     }
 
     async function uploadPhotoToDrive(item) {
       const res = await fetch(config.webAppUrl, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'uploadPhoto', folderId: config.driveFolderId, imageData: item.image.split(',')[1], mimeType: 'image/jpeg', filename: `${item.tracking.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`, tracking: item.tracking })
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ 
+          action: 'uploadPhoto', 
+          folderId: config.driveFolderId, 
+          imageData: item.image.split(',')[1], 
+          mimeType: 'image/jpeg', 
+          filename: item.tracking.replace(/[^a-zA-Z0-9]/g, '_') + '.jpg', 
+          tracking: item.tracking 
+        })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       if (json.status !== 'success') throw new Error(json.message || 'Upload failed');
       return { url: json.url || json.fileUrl || '', fileId: json.fileId || '' };
@@ -404,21 +715,25 @@
 
     async function saveToSheet(sheetData) {
       const res = await fetch(config.webAppUrl, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'saveBatch', data: [sheetData] }) // ✅ แก้ไขแล้ว
+        method: 'POST', 
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'saveBatch', data: [sheetData] })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).substring(0, 100)}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       if (json.status !== 'success') throw new Error(json.message || 'Sheet save failed');
       return json;
     }
 
+    // === LOCAL STORAGE & IMPORT/EXPORT ===
     function saveToLocal() {
       try {
         localStorage.setItem('tp_import_data', JSON.stringify(importData));
         localStorage.setItem('tp_success_count', successCount);
         localStorage.setItem('tp_error_count', errorCount);
-      } catch(e) { log(`⚠️ บันทึก localStorage ล้มเหลว`, 'warn'); }
+      } catch(e) { 
+        log('⚠️ บันทึก localStorage ล้มเหลว'); 
+      }
     }
 
     function loadFromStorage() {
@@ -428,53 +743,86 @@
           importData = JSON.parse(saved);
           successCount = parseInt(localStorage.getItem('tp_success_count') || 0);
           errorCount = parseInt(localStorage.getItem('tp_error_count') || 0);
-          renderTable(); updateCounters();
-          log(`🔄 โหลดข้อมูลค้าง: ${importData.length} รายการ`);
+          renderTable(); 
+          updateCounters();
+          log('💾 โหลดข้อมูลค้าง: ' + importData.length + ' รายการ');
+          if(currentView === 'report' && importData.length > 0) {
+            setTimeout(renderDailyReport, 500);
+          }
         }
-      } catch (e) { log(`⚠️ โหลดข้อมูลค้างไม่สำเร็จ`, 'warn'); }
+      } catch (e) { 
+        log('⚠️ โหลดข้อมูลค้างไม่สำเร็จ'); 
+      }
     }
 
-    function exportPending() {
-      if (!importData.length) return alert('ไม่มีข้อมูล');
+    function exportData() {
+      if (!importData.length) return alert('ℹ️ ไม่มีข้อมูลให้ Export');
       const blob = new Blob([JSON.stringify(importData, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `tracking_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = 'tracking_backup_' + new Date().toISOString().slice(0,10) + '_' + importData.length + 'items.json';
       a.click();
-      log('📥 Export สำเร็จ');
+      log('📥 Export สำเร็จ: ' + importData.length + ' รายการ');
+      alert('✅ Export สำเร็จ ' + importData.length + ' รายการ');
     }
 
-    function restoreData(input) {
+    // ✅ แก้ไข: เปลี่ยนชื่อฟังก์ชันจาก importData เป็น restoreFromJson
+    function restoreFromJson(input) {
       const file = input.files[0];
       if (!file) return;
+      
+      log('📤 กำลัง Import จาก: ' + file.name);
+      
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
           if (Array.isArray(data)) {
-            if (confirm(`รวมข้อมูล ${data.length} รายการกับปัจจุบัน? (Cancel เพื่อแทนที่)`)) importData = importData.concat(data);
-            else importData = data;
+            if (confirm('📂 พบข้อมูล ' + data.length + ' รายการ\n\nต้องการรวมกับข้อมูลปัจจุบันหรือไม่?\n[OK] = รวมข้อมูล\n[Cancel] = แทนที่ทั้งหมด')) {
+              importData = importData.concat(data);
+            } else {
+              importData = data;
+            }
             successCount = importData.filter(d => d.uploadStatus === 'success').length;
             errorCount = importData.filter(d => d.uploadStatus === 'error').length;
-            renderTable(); updateCounters(); saveToLocal();
-            log(`📤 Import สำเร็จ ${data.length} รายการ`);
+            renderTable(); 
+            updateCounters(); 
+            saveToLocal();
+            if(currentView === 'report') renderDailyReport();
+            log('📤 Import สำเร็จ ' + data.length + ' รายการ');
+            alert('✅ Import สำเร็จ ' + data.length + ' รายการ');
+          } else {
+            alert('❌ ไฟล์ไม่ถูกต้อง');
           }
-        } catch (err) { alert(`อ่านไฟล์ไม่สำเร็จ: ${err.message}`); }
+        } catch (err) { 
+          alert('❌ อ่านไฟล์ไม่สำเร็จ:\n' + err.message); 
+          log('❌ Import ล้มเหลว: ' + err.message);
+        }
       };
       reader.readAsText(file);
+      input.value = '';
     }
 
-    function log(msg, type='info') {
+    // === LOG FUNCTIONS ===
+    function log(msg) {
       const box = document.getElementById('debugLog');
       const time = new Date().toLocaleTimeString('th-TH');
-      const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '✓';
-      const color = type === 'error' ? '#f87171' : type === 'warn' ? '#fbbf24' : '#10b981';
-      box.innerHTML += `<div style="color:${color}">[${time}] ${prefix} ${msg}</div>`;
+      box.innerHTML += '[' + time + '] ' + msg + '\n';
       box.scrollTop = box.scrollHeight;
+      console.log(msg);
     }
-    function clearLogs() { document.getElementById('debugLog').innerHTML = ''; log('ล้าง Log เรียบร้อย'); }
+    
+    function clearLogs() { 
+      document.getElementById('debugLog').innerHTML = ''; 
+      log('🗑️ ล้าง Log เรียบร้อย'); 
+    }
+    
     function copyLog() {
-      navigator.clipboard.writeText(document.getElementById('debugLog').innerText).then(() => alert('คัดลอก Log เรียบร้อย'));
+      const text = document.getElementById('debugLog').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 คัดลอก Log เรียบร้อย');
+        log('📋 คัดลอก Log แล้ว');
+      }).catch(() => alert('❌ ไม่สามารถคัดลอกได้'));
     }
   </script>
 </body>
