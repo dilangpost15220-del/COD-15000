@@ -110,6 +110,88 @@
     .checkbox-item input[type="checkbox"] { width:17px; height:17px; cursor:pointer; accent-color:var(--primary); }
     .checkbox-item label { cursor:pointer; font-weight:600; font-size:0.875rem; user-select:none; }
 
+    /* ===== WATERMARK SETTINGS ===== */
+    .watermark-settings {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border: 2px solid #334155;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      color: #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    .watermark-settings::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .watermark-settings h4 {
+      color: #60a5fa;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+    }
+    .wm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .wm-field label {
+      display: block;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .wm-field input, .wm-field select {
+      width: 100%;
+      padding: 9px 12px;
+      background: #0f172a;
+      border: 1.5px solid #334155;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+    .wm-field input:focus, .wm-field select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    .wm-field select option { background: #1e293b; }
+    .wm-toggles { display: flex; gap: 14px; flex-wrap: wrap; }
+    .wm-toggle { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+    .wm-toggle input[type="checkbox"] { width: 15px; height: 15px; accent-color: #2563eb; cursor: pointer; }
+    .wm-toggle label { cursor: pointer; font-size: 0.82rem; color: #cbd5e1; font-weight: 600; }
+    .gps-status { font-size: 0.78rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; }
+    .gps-ok { background: rgba(22,163,74,0.2); color: #4ade80; border: 1px solid rgba(22,163,74,0.4); }
+    .gps-wait { background: rgba(217,119,6,0.2); color: #fbbf24; border: 1px solid rgba(217,119,6,0.4); }
+    .gps-fail { background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.4); }
+
+    /* Watermark preview badge on image */
+    .img-wm-badge {
+      position: absolute;
+      bottom: 3px; right: 3px;
+      background: rgba(37,99,235,0.85);
+      color: #fff;
+      font-size: 0.6rem;
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-weight: 700;
+      line-height: 1.3;
+      pointer-events: none;
+    }
+    .img-wrap { position: relative; display: inline-block; }
+
     /* ===== PHOTO PICKER MODAL ===== */
     .modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); z-index:1000; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.25s; }
     .modal-overlay.open { opacity:1; pointer-events:all; }
@@ -119,6 +201,8 @@
     .modal-title { text-align:center; font-size:1rem; font-weight:700; color:#374151; margin-bottom:20px; }
     .modal-preview { width:100%; height:200px; object-fit:cover; border-radius:14px; margin-bottom:16px; display:none; border:3px solid #bfdbfe; }
     .modal-preview.show { display:block; }
+    .wm-indicator { background: linear-gradient(135deg,#0f172a,#1e293b); border:1px solid #334155; border-radius:8px; padding:8px 12px; margin-bottom:12px; display:none; font-size:0.75rem; color:#94a3b8; font-family: 'Courier New', monospace; line-height:1.7; }
+    .wm-indicator.show { display:block; }
     .photo-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
     .photo-opt-btn { display:flex; flex-direction:column; align-items:center; gap:8px; padding:18px 10px; border:2.5px solid var(--border); border-radius:14px; background:#f8faff; cursor:pointer; transition:all 0.2s; font-weight:700; font-size:0.875rem; color:#374151; }
     .photo-opt-btn:hover { border-color:var(--primary); background:var(--light-blue); transform:translateY(-2px); box-shadow:0 6px 16px rgba(37,99,235,0.12); }
@@ -134,7 +218,7 @@
     /* Desktop: modal centered */
     @media(min-width:600px) {
       .modal-overlay { align-items:center; }
-      .photo-modal { border-radius:20px; max-width:420px; }
+      .photo-modal { border-radius:20px; max-width:480px; }
     }
 
     /* ===== CAMERA MODAL ===== */
@@ -169,6 +253,7 @@
       .action-btns { flex-wrap:wrap; }
       .stats-bar { gap:8px; }
       .stat-card { min-width:calc(50% - 4px); }
+      .wm-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -199,6 +284,67 @@
       </div>
     </div>
 
+    <!-- ===== WATERMARK SETTINGS PANEL ===== -->
+    <div class="watermark-settings">
+      <h4>
+        🔏 ตั้งค่า Watermark อัตโนมัติ
+        <span class="gps-status gps-wait" id="gpsStatus">📡 รอ GPS...</span>
+      </h4>
+      <div class="wm-grid">
+        <div class="wm-field">
+          <label>👤 ชื่อหัวหน้าไปรษณีย์</label>
+          <input type="text" id="wmOperatorName" placeholder="เช่น นายสมชาย ใจดี" oninput="saveWmSettings()">
+        </div>
+        <div class="wm-field">
+          <label>🏣 รหัส / ชื่อ ปณ.</label>
+          <input type="text" id="wmBranchName" placeholder="เช่น ปณ.ลพบุรี / 15000" oninput="saveWmSettings()">
+        </div>
+        <div class="wm-field">
+          <label>🎨 ตำแหน่ง Watermark</label>
+          <select id="wmPosition" onchange="saveWmSettings()">
+            <option value="bottom-left">↙ ล่างซ้าย</option>
+            <option value="bottom-right">↘ ล่างขวา</option>
+            <option value="top-left">↖ บนซ้าย</option>
+            <option value="top-right" selected>↗ บนขวา</option>
+            <option value="center">⊙ กลางภาพ (โปร่งแสง)</option>
+          </select>
+        </div>
+        <div class="wm-field">
+          <label>🔤 ขนาดตัวอักษร</label>
+          <select id="wmFontSize" onchange="saveWmSettings()">
+            <option value="small">เล็ก (S)</option>
+            <option value="medium" selected>กลาง (M)</option>
+            <option value="large">ใหญ่ (L)</option>
+          </select>
+        </div>
+      </div>
+      <div class="wm-toggles">
+        <div class="wm-toggle">
+          <input type="checkbox" id="wmEnabled" checked onchange="saveWmSettings()">
+          <label for="wmEnabled">✅ เปิดใช้ Watermark</label>
+        </div>
+        <div class="wm-toggle">
+          <input type="checkbox" id="wmShowDateTime" checked onchange="saveWmSettings()">
+          <label for="wmShowDateTime">🕒 แสดงวันที่–เวลา</label>
+        </div>
+        <div class="wm-toggle">
+          <input type="checkbox" id="wmShowGPS" checked onchange="saveWmSettings()">
+          <label for="wmShowGPS">📍 แสดง GPS</label>
+        </div>
+        <div class="wm-toggle">
+          <input type="checkbox" id="wmShowTracking" checked onchange="saveWmSettings()">
+          <label for="wmShowTracking">📦 แสดงเลขพัสดุ</label>
+        </div>
+        <div class="wm-toggle">
+          <input type="checkbox" id="wmDiagonal" onchange="saveWmSettings()">
+          <label for="wmDiagonal">↗ ข้อความทแยง (Diagonal)</label>
+        </div>
+      </div>
+      <div style="margin-top:10px; font-size:0.77rem; color:#64748b; line-height:1.6;">
+        💡 Watermark จะถูกฝังลงภาพโดยอัตโนมัติทันทีหลังถ่ายรูปหรือเลือกรูปจากแกลเลอรี — ก่อนบันทึกและอัปโหลดทุกครั้ง
+      </div>
+    </div>
+
     <div class="upload-zone" id="dropZone" onclick="handleUploadZoneClick()">
       <div class="icon">📁</div>
       <h3>คลิกเพื่อเลือกไฟล์ Excel/CSV</h3>
@@ -216,6 +362,11 @@
         <div class="modal-handle"></div>
         <div class="modal-title">📸 เพิ่มรูปภาพ</div>
         <img id="modalPreview" class="modal-preview" alt="preview">
+        <!-- Watermark preview info -->
+        <div class="wm-indicator" id="wmIndicator">
+          <strong style="color:#60a5fa;">🔏 Watermark ที่จะฝัง:</strong><br>
+          <span id="wmPreviewText"></span>
+        </div>
         <div class="photo-options">
           <div class="photo-opt-btn" id="optCamera" onclick="chooseCamera()">
             <span class="opt-icon">📷</span>
@@ -349,38 +500,260 @@
     const DRIVE_FOLDER_ID = '1Axx6dXHQ1jz4qH0OfpXjQZ0Azy6lcHus';
     const config = { webAppUrl: WEB_APP_URL, driveFolderId: DRIVE_FOLDER_ID };
 
+    // ===== GPS / LOCATION STATE =====
+    let gpsData = { lat: null, lng: null, accuracy: null, status: 'waiting' };
+
+    function initGPS() {
+      if (!navigator.geolocation) {
+        setGpsStatus('fail', '❌ ไม่รองรับ GPS');
+        return;
+      }
+      setGpsStatus('wait', '📡 กำลังรับ GPS...');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          gpsData.lat = pos.coords.latitude.toFixed(6);
+          gpsData.lng = pos.coords.longitude.toFixed(6);
+          gpsData.accuracy = Math.round(pos.coords.accuracy);
+          gpsData.status = 'ok';
+          setGpsStatus('ok', '✅ GPS: ' + gpsData.lat + ', ' + gpsData.lng);
+          log('📍 GPS: ' + gpsData.lat + ', ' + gpsData.lng + ' (±' + gpsData.accuracy + 'm)', 'success');
+        },
+        err => {
+          gpsData.status = 'fail';
+          const msgs = { 1: 'ไม่ได้รับอนุญาต', 2: 'ไม่พบตำแหน่ง', 3: 'หมดเวลา' };
+          setGpsStatus('fail', '⚠️ GPS: ' + (msgs[err.code] || err.message));
+          log('⚠️ GPS ไม่สำเร็จ: ' + (msgs[err.code] || err.message), 'warn');
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      );
+    }
+
+    function setGpsStatus(type, text) {
+      const el = document.getElementById('gpsStatus');
+      el.className = 'gps-status gps-' + type;
+      el.textContent = text;
+    }
+
+    // ===== WATERMARK SETTINGS =====
+    function saveWmSettings() {
+      const s = getWmSettings();
+      try { localStorage.setItem('wm_settings', JSON.stringify(s)); } catch(e) {}
+    }
+
+    function getWmSettings() {
+      return {
+        enabled: document.getElementById('wmEnabled').checked,
+        operatorName: document.getElementById('wmOperatorName').value.trim(),
+        branchName: document.getElementById('wmBranchName').value.trim(),
+        position: document.getElementById('wmPosition').value,
+        fontSize: document.getElementById('wmFontSize').value,
+        showDateTime: document.getElementById('wmShowDateTime').checked,
+        showGPS: document.getElementById('wmShowGPS').checked,
+        showTracking: document.getElementById('wmShowTracking').checked,
+        diagonal: document.getElementById('wmDiagonal').checked
+      };
+    }
+
+    function loadWmSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem('wm_settings') || '{}');
+        if (s.operatorName !== undefined) document.getElementById('wmOperatorName').value = s.operatorName;
+        if (s.branchName !== undefined) document.getElementById('wmBranchName').value = s.branchName;
+        if (s.position !== undefined) document.getElementById('wmPosition').value = s.position;
+        if (s.fontSize !== undefined) document.getElementById('wmFontSize').value = s.fontSize;
+        if (s.enabled !== undefined) document.getElementById('wmEnabled').checked = s.enabled;
+        if (s.showDateTime !== undefined) document.getElementById('wmShowDateTime').checked = s.showDateTime;
+        if (s.showGPS !== undefined) document.getElementById('wmShowGPS').checked = s.showGPS;
+        if (s.showTracking !== undefined) document.getElementById('wmShowTracking').checked = s.showTracking;
+        if (s.diagonal !== undefined) document.getElementById('wmDiagonal').checked = s.diagonal;
+      } catch(e) {}
+    }
+
+    // ===== WATERMARK ENGINE =====
+    // Returns a promise that resolves to a watermarked base64 image
+    async function applyWatermark(imageDataUrl, trackingNumber) {
+      const s = getWmSettings();
+      if (!s.enabled) return imageDataUrl;
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          // Build watermark lines
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit' });
+          const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+          const lines = [];
+          if (s.operatorName) lines.push('👤 ' + s.operatorName);
+          if (s.branchName) lines.push('🏣 ' + s.branchName);
+          if (s.showTracking && trackingNumber) lines.push('📦 ' + trackingNumber);
+          if (s.showDateTime) lines.push('🕒 ' + dateStr + ' ' + timeStr);
+          if (s.showGPS && gpsData.lat) {
+            lines.push('📍 ' + gpsData.lat + ', ' + gpsData.lng + (gpsData.accuracy ? ' (±' + gpsData.accuracy + 'm)' : ''));
+          } else if (s.showGPS) {
+            lines.push('📍 ไม่มีข้อมูล GPS');
+          }
+
+          if (!lines.length) { resolve(canvas.toDataURL('image/jpeg', 0.92)); return; }
+
+          // Font size based on image size & setting
+          const basePx = Math.max(img.width, img.height);
+          const sizeMap = { small: 0.022, medium: 0.030, large: 0.040 };
+          const ratio = sizeMap[s.fontSize] || 0.030;
+          const fontSize = Math.max(14, Math.round(basePx * ratio));
+          const padding = Math.round(fontSize * 0.6);
+          const lineH = Math.round(fontSize * 1.55);
+          const blockH = lineH * lines.length + padding * 2;
+          // Approximate max line width
+          ctx.font = 'bold ' + fontSize + 'px "Segoe UI", Arial, sans-serif';
+          const maxLineW = Math.max(...lines.map(l => ctx.measureText(l).width));
+          const blockW = maxLineW + padding * 2.5;
+
+          if (s.diagonal) {
+            // Semi-transparent diagonal text watermark across the image
+            ctx.save();
+            ctx.globalAlpha = 0.15;
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold ' + Math.round(basePx * 0.032) + 'px "Segoe UI", Arial, sans-serif';
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 6);
+            const diagText = lines.join('  |  ');
+            ctx.fillText(diagText, -ctx.measureText(diagText).width / 2, 0);
+            ctx.restore();
+          }
+
+          // Position calculation
+          let x, y;
+          const pos = s.position;
+          const margin = Math.round(fontSize * 0.8);
+          if (pos === 'bottom-left') { x = margin; y = img.height - blockH - margin; }
+          else if (pos === 'bottom-right') { x = img.width - blockW - margin; y = img.height - blockH - margin; }
+          else if (pos === 'top-left') { x = margin; y = margin; }
+          else if (pos === 'top-right') { x = img.width - blockW - margin; y = margin; }
+          else { // center
+            x = (img.width - blockW) / 2;
+            y = (img.height - blockH) / 2;
+          }
+
+          // Draw background panel
+          ctx.save();
+          if (pos === 'center') {
+            ctx.globalAlpha = 0.18;
+          } else {
+            ctx.globalAlpha = 0.35;
+          }
+          // Rounded rect
+          const r = Math.round(fontSize * 0.5);
+          ctx.fillStyle = '#0f172a';
+          roundRect(ctx, x, y, blockW, blockH, r);
+          ctx.fill();
+
+          // Left accent bar
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#2563eb';
+          roundRect(ctx, x, y, Math.round(fontSize * 0.25), blockH, r);
+          ctx.fill();
+          ctx.restore();
+
+          // Draw text lines
+          ctx.save();
+          ctx.globalAlpha = 0.75;
+          ctx.font = 'bold ' + fontSize + 'px "Segoe UI", Arial, sans-serif';
+          ctx.textBaseline = 'top';
+          ctx.shadowColor = 'rgba(0,0,0,0.4)';
+          ctx.shadowBlur = 2;
+          lines.forEach((line, i) => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(line, x + padding + Math.round(fontSize * 0.35), y + padding + i * lineH);
+          });
+          ctx.restore();
+
+          // Small "VERIFIED" stamp top-right corner of block
+          const stampText = '✓ VERIFIED';
+          const stampFs = Math.max(9, Math.round(fontSize * 0.55));
+          ctx.save();
+          ctx.globalAlpha = 0.75;
+          ctx.font = 'bold ' + stampFs + 'px "Segoe UI", Arial, sans-serif';
+          ctx.fillStyle = '#22c55e';
+          ctx.textBaseline = 'top';
+          ctx.fillText(stampText, x + blockW - ctx.measureText(stampText).width - padding * 0.5, y + padding * 0.4);
+          ctx.restore();
+
+          resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        img.onerror = () => resolve(imageDataUrl);
+        img.src = imageDataUrl;
+      });
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function buildWmPreviewText(trackingNumber) {
+      const s = getWmSettings();
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit' });
+      const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      const lines = [];
+      if (s.operatorName) lines.push('👤 ' + s.operatorName);
+      if (s.branchName) lines.push('🏣 ' + s.branchName);
+      if (s.showTracking && trackingNumber) lines.push('📦 ' + trackingNumber);
+      if (s.showDateTime) lines.push('🕒 ' + dateStr + ' ' + timeStr);
+      if (s.showGPS && gpsData.lat) lines.push('📍 ' + gpsData.lat + ', ' + gpsData.lng);
+      else if (s.showGPS) lines.push('📍 (รอ GPS)');
+      return lines.join('\n');
+    }
+
+    function showWmIndicator(trackingNumber) {
+      const s = getWmSettings();
+      const el = document.getElementById('wmIndicator');
+      const txt = document.getElementById('wmPreviewText');
+      if (!s.enabled) { el.classList.remove('show'); return; }
+      txt.textContent = buildWmPreviewText(trackingNumber);
+      el.classList.add('show');
+    }
+
+    // ===== INIT =====
     window.addEventListener('load', function() {
-      console.log('🚀 System Starting...');
-      log('🚀 ระบบ Tracking Pro V6 พร้อมใช้งาน');
+      log('🚀 ระบบ Tracking Pro V7 (Watermark Edition) พร้อมใช้งาน');
       if (typeof XLSX === 'undefined') {
         log('❌ XLSX Library ไม่พบ กรุณาเชื่อมต่ออินเทอร์เน็ต', 'error');
       } else {
         log('✅ XLSX Library โหลดสำเร็จ');
       }
       try {
+        loadWmSettings();
+        initGPS();
         initDragAndDrop();
         loadFromStorage();
         log('✅ ระบบพร้อมใช้งาน — คลิกที่พื้นที่สีฟ้าเพื่ออัปโหลดไฟล์', 'success');
-        console.log('✅ System Ready');
       } catch (error) {
-        console.error('❌ Init Error:', error);
         log('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
       }
     });
 
     function handleUploadZoneClick() {
-      console.log('👆 Upload zone clicked');
-      log('👆 คลิกที่พื้นที่อัปโหลด');
-      const fileInput = document.getElementById('fileInput');
-      if (fileInput) {
-        fileInput.click();
-      } else {
-        log('❌ ไม่พบ file input element', 'error');
-      }
+      document.getElementById('fileInput').click();
     }
 
     function handleFileSelect(event) {
-      console.log('📂 File selected:', event.target.files.length);
       const files = event.target.files;
       if (files && files.length > 0) {
         log('📂 เลือกไฟล์: ' + files[0].name);
@@ -391,15 +764,13 @@
 
     function initDragAndDrop() {
       const dropZone = document.getElementById('dropZone');
-      if (!dropZone) { console.error('❌ Drop zone not found'); return; }
-      dropZone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
-      dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
-      dropZone.addEventListener('drop', function(e) { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); const files = e.dataTransfer.files; if (files.length > 0) { log('💧 พบไฟล์: ' + files[0].name); handleFiles(files); } });
-      console.log('✅ Drag and drop initialized');
+      if (!dropZone) return;
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+      dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
+      dropZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); const files = e.dataTransfer.files; if (files.length > 0) handleFiles(files); });
     }
 
     function switchView(view) {
-      console.log('🔄 Switching to:', view);
       currentView = view;
       document.getElementById('tableView').classList.toggle('hidden', view !== 'table');
       document.getElementById('reportView').classList.toggle('hidden', view !== 'report');
@@ -428,37 +799,28 @@
     }
 
     function handleFiles(files) {
-      if (!files || files.length === 0) { log('⚠️ ไม่มีไฟล์', 'warn'); return; }
+      if (!files || files.length === 0) return;
       const file = files[0];
-      console.log('📄 Processing file:', file.name, file.size, 'bytes');
       log('📄 กำลังอ่านไฟล์: ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)');
       const reader = new FileReader();
       reader.onload = function(e) {
-        console.log('📖 File read complete');
-        log('📖 กำลังประมวลผล Excel...');
         try {
           const data = new Uint8Array(e.target.result);
-          console.log('📊 Data size:', data.length, 'bytes');
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          console.log('📚 Workbook loaded. Sheets:', workbook.SheetNames);
-          if (workbook.SheetNames.length === 0) { throw new Error('ไม่มีชีทในไฟล์'); }
+          if (!workbook.SheetNames.length) throw new Error('ไม่มีชีทในไฟล์');
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: '', raw: false });
-          console.log('📋 JSON data:', jsonData.length, 'rows');
           log('✅ พบ ' + jsonData.length + ' รายการ');
-          if (jsonData.length === 0) { throw new Error('ไฟล์ไม่มีข้อมูล'); }
-          if (jsonData[0]) { console.log('📑 Columns:', Object.keys(jsonData[0])); log('📑 คอลัมน์: ' + Object.keys(jsonData[0]).join(', ')); }
+          if (!jsonData.length) throw new Error('ไฟล์ไม่มีข้อมูล');
           parseImportData(jsonData);
           switchView('table');
           log('✅ โหลดไฟล์สำเร็จ', 'success');
         } catch (err) {
-          console.error('❌ Error:', err);
           log('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
           alert('❌ อ่านไฟล์ไม่สำเร็จ:\n\n' + err.message);
         }
       };
-      reader.onerror = function() { console.error('❌ FileReader error'); log('❌ ไม่สามารถอ่านไฟล์ได้', 'error'); alert('❌ ไม่สามารถอ่านไฟล์ได้'); };
-      console.log('🚀 Starting FileReader...');
+      reader.onerror = () => { log('❌ ไม่สามารถอ่านไฟล์ได้', 'error'); alert('❌ ไม่สามารถอ่านไฟล์ได้'); };
       reader.readAsArrayBuffer(file);
     }
 
@@ -485,16 +847,11 @@
               datetime = new Date(dateStr);
             }
           }
-          const holdDays = parseNumericValue(holdDaysFromDest);
-          const attempts = parseNumericValue(attemptsRaw);
-          log('✅ แถว ' + (i+1) + ': ' + tracking + ' | ถือครอง: ' + holdDays + ' | พยายาม: ' + attempts);
-          return { id: id, tracking: tracking.toString().trim(), branch: branch.toString().trim(), operator: operator.toString().trim(), datetime: datetime.toISOString(), reason: reason.toString().trim(), status: 'รอ', lazada: lazada.toString().trim(), holdDays: holdDays, attempts: attempts, photoUrl: '', driveFileId: '', image: null, uploadStatus: 'pending' };
+          return { id, tracking: tracking.toString().trim(), branch: branch.toString().trim(), operator: operator.toString().trim(), datetime: datetime.toISOString(), reason: reason.toString().trim(), status: 'รอ', lazada: lazada.toString().trim(), holdDays: parseNumericValue(holdDaysFromDest), attempts: parseNumericValue(attemptsRaw), photoUrl: '', driveFileId: '', image: null, uploadStatus: 'pending' };
         } catch (err) { log('❌ Error row ' + (i+1) + ': ' + err.message); return null; }
       }).filter(item => item !== null);
       importData = importData.concat(newItems);
-      renderTable(); 
-      updateCounters(); 
-      saveToLocal();
+      renderTable(); updateCounters(); saveToLocal();
       log('✅ เพิ่มข้อมูล ' + newItems.length + ' รายการ', 'success');
     }
 
@@ -507,7 +864,7 @@
       tbody.innerHTML = filtered.map((d) => {
         const originalIdx = importData.indexOf(d);
         const imgCell = d.image
-          ? '<img src="' + d.image + '" class="img-preview" onclick="viewImage(\'' + d.image + '\')">'
+          ? '<div class="img-wrap"><img src="' + d.image + '" class="img-preview" onclick="viewImage(\'' + encodeURIComponent(d.image).substring(0,50) + '\')" title="คลิกดูรูปเต็ม"><span class="img-wm-badge">WM</span></div>'
           : '<div class="img-placeholder">📷<br>ยังไม่มีรูป</div>';
         const statusBadge = '<span class="status-badge status-' + d.uploadStatus + '">'
           + (d.uploadStatus === 'success' ? '✅ สำเร็จ' : d.uploadStatus === 'error' ? '❌ ไม่สำเร็จ' : '⏳ รอ')
@@ -533,7 +890,11 @@
       }).join('');
     }
 
-    function formatDateTime(iso) { if (!iso) return '-'; const d = new Date(iso); return d.toLocaleString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' }); }
+    function formatDateTime(iso) {
+      if (!iso) return '-';
+      const d = new Date(iso);
+      return d.toLocaleString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
 
     function updateCounters() {
       const pending = importData.filter(d => d.uploadStatus === 'pending').length;
@@ -547,16 +908,16 @@
 
     // ===== PHOTO MODAL =====
     let currentPhotoIndex = -1;
-    let pendingPhotoData = null;
+    let pendingPhotoData = null; // raw (before watermark)
 
     function openPhotoModal(index) {
       currentPhotoIndex = index;
       pendingPhotoData = null;
       document.getElementById('btnConfirmPhoto').disabled = true;
       document.getElementById('modalPreview').classList.remove('show');
+      document.getElementById('wmIndicator').classList.remove('show');
       document.getElementById('optCamera').classList.remove('selected');
       document.getElementById('optGallery').classList.remove('selected');
-      // Update title if item already has image
       const item = importData[index];
       document.querySelector('.modal-title').textContent = item.image ? '📸 เปลี่ยนรูปภาพ' : '📸 เพิ่มรูปภาพ';
       if (item.image) {
@@ -577,9 +938,24 @@
       if (e.target === document.getElementById('photoModal')) closePhotoModal();
     }
 
+    // ===== PROCESS PHOTO WITH WATERMARK =====
+    async function processPhotoWithWatermark(rawDataUrl) {
+      const item = currentPhotoIndex >= 0 ? importData[currentPhotoIndex] : null;
+      const trackingNum = item ? item.tracking : '';
+      log('🔏 กำลังฝัง Watermark...');
+      const wmDataUrl = await applyWatermark(rawDataUrl, trackingNum);
+      pendingPhotoData = wmDataUrl;
+      const preview = document.getElementById('modalPreview');
+      preview.src = wmDataUrl;
+      preview.classList.add('show');
+      document.getElementById('btnConfirmPhoto').disabled = false;
+      showWmIndicator(trackingNum);
+      log('✅ Watermark ฝังสำเร็จ', 'success');
+    }
+
     // ===== WebRTC CAMERA =====
     let camStream = null;
-    let camFacingMode = 'environment'; // start with back camera
+    let camFacingMode = 'environment';
 
     async function chooseCamera() {
       document.getElementById('optCamera').classList.add('selected');
@@ -588,16 +964,12 @@
     }
 
     async function openCamera() {
-      // Check support
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         log('⚠️ เบราว์เซอร์ไม่รองรับกล้อง — เปลี่ยนเป็นเลือกไฟล์', 'warn');
         document.getElementById('cameraInput').click();
         return;
       }
       document.getElementById('camModal').classList.add('open');
-      const video = document.getElementById('camVideo');
-      video.innerHTML = '';
-      // Show flip button only if multiple cameras likely exist
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cams = devices.filter(d => d.kind === 'videoinput');
@@ -609,20 +981,14 @@
     async function startStream() {
       stopStream();
       const video = document.getElementById('camVideo');
-      const constraints = {
-        video: { facingMode: camFacingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
-        audio: false
-      };
       try {
-        camStream = await navigator.mediaDevices.getUserMedia(constraints);
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacingMode, width:{ideal:1280}, height:{ideal:960} }, audio: false });
         video.srcObject = camStream;
         log('📷 เปิดกล้องสำเร็จ (' + camFacingMode + ')');
       } catch(err) {
-        // Fallback: try any camera
         try {
           camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
           video.srcObject = camStream;
-          log('📷 เปิดกล้องสำเร็จ (กล้องเริ่มต้น)');
         } catch(err2) {
           const box = document.getElementById('camVideo');
           box.outerHTML = '<div class="cam-error" id="camVideo">❌ ไม่สามารถเข้าถึงกล้องได้<br><small>' + err2.message + '</small><br><br>กรุณาอนุญาตการใช้งานกล้อง<br>หรือใช้ปุ่ม "เลือกรูป" แทน</div>';
@@ -632,50 +998,36 @@
     }
 
     function stopStream() {
-      if (camStream) {
-        camStream.getTracks().forEach(t => t.stop());
-        camStream = null;
-      }
+      if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
     }
 
     async function flipCamera() {
       camFacingMode = camFacingMode === 'environment' ? 'user' : 'environment';
-      log('🔄 สลับเป็นกล้อง ' + (camFacingMode === 'user' ? 'หน้า' : 'หลัง'));
       await startStream();
     }
 
-    function capturePhoto() {
+    async function capturePhoto() {
       const video = document.getElementById('camVideo');
       if (!camStream || !(video instanceof HTMLVideoElement)) return;
       const canvas = document.getElementById('camCanvas');
-      canvas.width  = video.videoWidth  || 1280;
+      canvas.width = video.videoWidth || 1280;
       canvas.height = video.videoHeight || 960;
       const ctx = canvas.getContext('2d');
-      // Mirror if front camera
-      if (camFacingMode === 'user') {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-      }
+      if (camFacingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
       ctx.drawImage(video, 0, 0);
-      // Flash animation
       const flash = document.getElementById('camFlash');
       flash.classList.remove('flash');
-      void flash.offsetWidth; // reflow
+      void flash.offsetWidth;
       flash.classList.add('flash');
-      pendingPhotoData = canvas.toDataURL('image/jpeg', 0.88);
-      // Show preview in photo modal
-      const preview = document.getElementById('modalPreview');
-      preview.src = pendingPhotoData;
-      preview.classList.add('show');
-      document.getElementById('btnConfirmPhoto').disabled = false;
+      const rawData = canvas.toDataURL('image/jpeg', 0.92);
       log('📸 ถ่ายรูปสำเร็จ (' + canvas.width + 'x' + canvas.height + ')');
       closeCamera();
+      await processPhotoWithWatermark(rawData);
     }
 
     function closeCamera() {
       stopStream();
       document.getElementById('camModal').classList.remove('open');
-      // Restore video element if it was replaced by error div
       const box = document.getElementById('camVideo');
       if (!(box instanceof HTMLVideoElement)) {
         const v = document.createElement('video');
@@ -692,45 +1044,43 @@
       document.getElementById('galleryInput').click();
     }
 
-    function handlePhotoInput(event) {
+    async function handlePhotoInput(event) {
       const file = event.target.files[0];
       if (!file) return;
+      log('📷 เลือกรูป: ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)');
       const reader = new FileReader();
-      reader.onload = function(ev) {
-        pendingPhotoData = ev.target.result;
-        const preview = document.getElementById('modalPreview');
-        preview.src = pendingPhotoData;
-        preview.classList.add('show');
-        document.getElementById('btnConfirmPhoto').disabled = false;
-        log('📷 เลือกรูป: ' + file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)');
+      reader.onload = async function(ev) {
+        await processPhotoWithWatermark(ev.target.result);
       };
       reader.readAsDataURL(file);
     }
 
     function confirmPhoto() {
-      if (pendingPhotoData === null || currentPhotoIndex < 0) return;
+      if (!pendingPhotoData || currentPhotoIndex < 0) return;
       importData[currentPhotoIndex].image = pendingPhotoData;
       importData[currentPhotoIndex].uploadStatus = 'pending';
-      renderTable();
-      updateCounters();
-      saveToLocal();
-      log('✅ แนบรูปภาพสำเร็จ', 'success');
+      renderTable(); updateCounters(); saveToLocal();
+      log('✅ แนบรูปภาพ (พร้อม Watermark) สำเร็จ', 'success');
       closePhotoModal();
     }
 
-    // Keep old triggerUpload as alias (backward compat)
     function triggerUpload(index) { openPhotoModal(index); }
 
-    function viewImage(src) { window.open(src, '_blank'); }
+    function viewImage(src) {
+      // Find the item and open full image
+      const item = importData.find(d => d.image && encodeURIComponent(d.image).substring(0,50) === src);
+      if (item && item.image) {
+        const w = window.open('', '_blank');
+        w.document.write('<img src="' + item.image + '" style="max-width:100%;height:auto;">');
+      }
+    }
     
     function removeItem(index) {
       if (confirm('🗑️ ลบรายการ "' + importData[index].tracking + '"?')) {
         if (importData[index].uploadStatus === 'success') successCount--;
         if (importData[index].uploadStatus === 'error') errorCount--;
         importData.splice(index, 1);
-        renderTable(); 
-        updateCounters(); 
-        saveToLocal();
+        renderTable(); updateCounters(); saveToLocal();
         if(currentView === 'report') renderDailyReport();
         log('🗑️ ลบรายการเรียบร้อย');
       }
@@ -741,9 +1091,7 @@
       if (!pending.length) return alert('ℹ️ ไม่มีรายการที่รอ');
       if (confirm('⚠️ เคลียร์ ' + pending.length + ' รายการ?')) {
         importData = importData.filter(d => d.uploadStatus === 'success');
-        renderTable(); 
-        updateCounters(); 
-        saveToLocal();
+        renderTable(); updateCounters(); saveToLocal();
         if(currentView === 'report') renderDailyReport();
         log('🗑️ เคลียร์รายการที่รอเรียบร้อย');
       }
@@ -752,12 +1100,8 @@
     function clearAllData() {
       if (!importData.length) return alert('ℹ️ ไม่มีข้อมูล');
       if (confirm('🚨 ลบทั้งหมด ' + importData.length + ' รายการ?') && confirm('⚠️ ยืนยันอีกครั้ง?')) {
-        importData = []; 
-        successCount = 0; 
-        errorCount = 0;
-        renderTable(); 
-        updateCounters(); 
-        saveToLocal();
+        importData = []; successCount = 0; errorCount = 0;
+        renderTable(); updateCounters(); saveToLocal();
         if(currentView === 'report') renderDailyReport();
         log('🗑️ เคลียร์ทั้งหมดเรียบร้อย');
       }
@@ -769,9 +1113,7 @@
       if (!importData.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#6b7280;">📂 ยังไม่มีข้อมูล</td></tr>';
         tfoot.innerHTML = '';
-        document.getElementById('dashTotal').textContent = '0';
-        document.getElementById('dashWithPhoto').textContent = '0';
-        document.getElementById('dashWithoutPhoto').textContent = '0';
+        ['dashTotal','dashWithPhoto','dashWithoutPhoto'].forEach(id => document.getElementById(id).textContent = '0');
         return;
       }
       const grouped = {};
@@ -779,25 +1121,21 @@
         const date = new Date(item.datetime).toLocaleDateString('th-TH');
         const po = item.branch || 'ไม่ระบุ';
         if (!grouped[date]) grouped[date] = {};
-        if (!grouped[date][po]) grouped[date][po] = { total: 0, withPhoto: 0, withoutPhoto: 0 };
+        if (!grouped[date][po]) grouped[date][po] = { total:0, withPhoto:0, withoutPhoto:0 };
         grouped[date][po].total++;
         if (item.image) grouped[date][po].withPhoto++; else grouped[date][po].withoutPhoto++;
       });
-      let html = '';
-      let grandTotal = 0, grandWith = 0, grandWithout = 0;
-      const sortedDates = Object.keys(grouped).sort((a, b) => { return new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-')); });
+      let html = '', grandTotal = 0, grandWith = 0, grandWithout = 0;
+      const sortedDates = Object.keys(grouped).sort((a,b) => new Date(b.split('/').reverse().join('-')) - new Date(a.split('/').reverse().join('-')));
       sortedDates.forEach(date => {
-        const pos = Object.keys(grouped[date]);
-        pos.forEach((po, idx) => {
+        Object.keys(grouped[date]).forEach((po, idx) => {
           const d = grouped[date][po];
-          grandTotal += d.total;
-          grandWith += d.withPhoto;
-          grandWithout += d.withoutPhoto;
-          html += '<tr style="border-bottom:1px solid #e5e7eb;">' + '<td style="padding:10px; ' + (idx === 0 ? 'font-weight:600; color:var(--primary);' : '') + '">' + (idx === 0 ? date : '') + '</td>' + '<td style="padding:10px;">' + po + '</td>' + '<td style="padding:10px; text-align:center; font-weight:600;">' + d.total + '</td>' + '<td style="padding:10px; text-align:center; color:var(--success); font-weight:600;">' + d.withPhoto + '</td>' + '<td style="padding:10px; text-align:center; color:var(--danger); font-weight:600;">' + d.withoutPhoto + '</td>' + '</tr>';
+          grandTotal += d.total; grandWith += d.withPhoto; grandWithout += d.withoutPhoto;
+          html += '<tr style="border-bottom:1px solid #e5e7eb;"><td style="padding:10px;' + (idx===0?'font-weight:600;color:var(--primary);':'') + '">' + (idx===0?date:'') + '</td><td style="padding:10px;">' + po + '</td><td style="padding:10px;text-align:center;font-weight:600;">' + d.total + '</td><td style="padding:10px;text-align:center;color:var(--success);font-weight:600;">' + d.withPhoto + '</td><td style="padding:10px;text-align:center;color:var(--danger);font-weight:600;">' + d.withoutPhoto + '</td></tr>';
         });
       });
       tbody.innerHTML = html;
-      tfoot.innerHTML = '<tr>' + '<td colspan="2" style="padding:12px; text-align:right; font-size:1.1rem;">📊 ยอดสรุปทั้งหมด</td>' + '<td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--primary);">' + grandTotal + '</td>' + '<td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--success);">' + grandWith + '</td>' + '<td style="padding:12px; text-align:center; font-size:1.2rem; color:var(--danger);">' + grandWithout + '</td>' + '</tr>';
+      tfoot.innerHTML = '<tr><td colspan="2" style="padding:12px;text-align:right;font-size:1.1rem;">📊 ยอดสรุปทั้งหมด</td><td style="padding:12px;text-align:center;font-size:1.2rem;color:var(--primary);">' + grandTotal + '</td><td style="padding:12px;text-align:center;font-size:1.2rem;color:var(--success);">' + grandWith + '</td><td style="padding:12px;text-align:center;font-size:1.2rem;color:var(--danger);">' + grandWithout + '</td></tr>';
       document.getElementById('dashTotal').textContent = grandTotal;
       document.getElementById('dashWithPhoto').textContent = grandWith;
       document.getElementById('dashWithoutPhoto').textContent = grandWithout;
@@ -814,46 +1152,39 @@
 
     function showProgress(show) {
       const container = document.getElementById('progressContainer');
-      if (show) { container.classList.add('active'); updateProgress(0, importData.filter(d => d.uploadStatus === 'pending').length, 0, 0); } else { setTimeout(() => container.classList.remove('active'), 2000); }
+      if (show) { container.classList.add('active'); updateProgress(0, importData.filter(d => d.uploadStatus === 'pending').length, 0, 0); }
+      else { setTimeout(() => container.classList.remove('active'), 2000); }
     }
 
     async function uploadBatch() {
       const pending = importData.filter(d => d.uploadStatus === 'pending');
       if (!pending.length) return alert('ℹ️ ไม่มีรายการรออัปโหลด');
-      if (!confirm(' ยืนยันอัปโหลด ' + pending.length + ' รายการ?')) return;
+      if (!confirm('ยืนยันอัปโหลด ' + pending.length + ' รายการ?')) return;
       document.getElementById('btnUploadAll').disabled = true;
       document.getElementById('btnUploadAll').innerHTML = '⏳ กำลังอัปโหลด...';
       showProgress(true);
       log('🚀 เริ่มอัปโหลด ' + pending.length + ' รายการ');
-      let currentSuccess = 0;
-      let currentError = 0;
+      let currentSuccess = 0, currentError = 0;
       for (let i = 0; i < pending.length; i++) {
         const item = pending[i];
         try {
           let photoUrl = '', driveFileId = '';
           if (item.image) {
-            log('📷 อัปโหลดรูป: ' + item.tracking);
+            log('📷 อัปโหลดรูป (พร้อม Watermark): ' + item.tracking);
             const res = await uploadPhotoToDrive(item);
-            photoUrl = res.url || ''; 
-            driveFileId = res.fileId || '';
+            photoUrl = res.url || ''; driveFileId = res.fileId || '';
           }
           const sheetData = { id: item.id, tracking: item.tracking, branch: item.branch, operator: item.operator, datetime: item.datetime, reason: item.reason, status: 'สำเร็จ', lazada: item.lazada, holdDays: item.holdDays, attempts: item.attempts, photoUrl, driveFileId, updatedAt: new Date().toISOString() };
           await saveToSheet(sheetData);
-          item.uploadStatus = 'success'; 
-          item.photoUrl = photoUrl; 
-          item.driveFileId = driveFileId;
-          successCount++; 
-          currentSuccess++;
+          item.uploadStatus = 'success'; item.photoUrl = photoUrl; item.driveFileId = driveFileId;
+          successCount++; currentSuccess++;
           log('✅ สำเร็จ: ' + item.tracking);
         } catch (err) {
-          item.uploadStatus = 'error'; 
-          errorCount++;
-          currentError++;
+          item.uploadStatus = 'error'; errorCount++; currentError++;
           log('❌ ล้มเหลว: ' + item.tracking + ' | ' + err.message);
         }
         updateProgress(i + 1, pending.length, currentSuccess, currentError);
-        renderTable(); 
-        updateCounters();
+        renderTable(); updateCounters();
       }
       document.getElementById('btnUploadAll').innerHTML = '📤 อัปโหลดที่รอไป Sheet';
       document.getElementById('btnUploadAll').disabled = false;
@@ -863,15 +1194,10 @@
       const autoClearAfterSheet = document.getElementById('autoClearAfterSheetUpload').checked;
       if (autoClearAfterSheet && currentError === 0) {
         setTimeout(() => {
-          importData = [];
-          successCount = 0;
-          errorCount = 0;
-          renderTable();
-          updateCounters();
-          saveToLocal();
+          importData = []; successCount = 0; errorCount = 0;
+          renderTable(); updateCounters(); saveToLocal();
           if(currentView === 'report') renderDailyReport();
-          const autoClearSearch = document.getElementById('autoClearSearch').checked;
-          if (autoClearSearch) { document.getElementById('searchInput').value = ''; }
+          if (document.getElementById('autoClearSearch').checked) document.getElementById('searchInput').value = '';
           log('🧹 เคลียร์ข้อมูลอัตโนมัติ');
         }, 2000);
       }
@@ -879,7 +1205,7 @@
     }
 
     async function uploadPhotoToDrive(item) {
-      const res = await fetch(config.webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'uploadPhoto', folderId: config.driveFolderId, imageData: item.image.split(',')[1], mimeType: 'image/jpeg', filename: item.tracking.replace(/[^a-zA-Z0-9]/g, '_') + '.jpg', tracking: item.tracking }) });
+      const res = await fetch(config.webAppUrl, { method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify({ action:'uploadPhoto', folderId:config.driveFolderId, imageData: item.image.split(',')[1], mimeType:'image/jpeg', filename: item.tracking.replace(/[^a-zA-Z0-9]/g,'_') + '.jpg', tracking: item.tracking }) });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       if (json.status !== 'success') throw new Error(json.message || 'Upload failed');
@@ -887,8 +1213,8 @@
     }
 
     async function saveToSheet(sheetData) {
-      const payload = { action: 'saveBatch', data: [sheetData] };
-      const res = await fetch(config.webAppUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+      const payload = { action:'saveBatch', data:[sheetData] };
+      const res = await fetch(config.webAppUrl, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const json = await res.json();
       if (json.status !== 'success') throw new Error(json.message || 'Sheet save failed');
@@ -910,12 +1236,10 @@
           importData = JSON.parse(saved);
           successCount = parseInt(localStorage.getItem('tp_success_count') || 0);
           errorCount = parseInt(localStorage.getItem('tp_error_count') || 0);
-          renderTable(); 
-          updateCounters();
+          renderTable(); updateCounters();
           log('💾 โหลดข้อมูลค้าง: ' + importData.length + ' รายการ');
-          if(currentView === 'report' && importData.length > 0) { setTimeout(renderDailyReport, 500); }
         }
-      } catch (e) { log('⚠️ โหลดข้อมูลค้างไม่สำเร็จ'); }
+      } catch(e) { log('⚠️ โหลดข้อมูลค้างไม่สำเร็จ'); }
     }
 
     function log(msg, type='info') {
@@ -925,14 +1249,13 @@
       const color = type === 'error' ? '#f87171' : type === 'warn' ? '#fbbf24' : type === 'success' ? '#10b981' : '#34d399';
       box.innerHTML += '<div style="color:' + color + '; margin-bottom:4px;">[' + time + '] ' + prefix + ' ' + msg + '</div>';
       box.scrollTop = box.scrollHeight;
-      console.log('[' + type.toUpperCase() + ']', msg);
     }
     
     function clearLogs() { document.getElementById('debugLog').innerHTML = ''; log('🗑️ ล้าง Log เรียบร้อย'); }
     
     function copyLog() {
       const text = document.getElementById('debugLog').innerText;
-      navigator.clipboard.writeText(text).then(() => { alert('📋 คัดลอก Log เรียบร้อย'); log('📋 คัดลอก Log แล้ว'); }).catch(() => alert('❌ ไม่สามารถคัดลอกได้'));
+      navigator.clipboard.writeText(text).then(() => { alert('📋 คัดลอก Log เรียบร้อย'); }).catch(() => alert('❌ ไม่สามารถคัดลอกได้'));
     }
   </script>
 </body>
