@@ -590,7 +590,7 @@
           const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
           const lines = [];
-          if (s.operatorName) lines.push('👤 ' + s.operatorName);
+          if (s.operatorName) lines.push('👤 หน.ปณ. ' + s.operatorName);
           if (s.branchName) lines.push('🏣 ' + s.branchName);
           if (s.showTracking && trackingNumber) lines.push('📦 ' + trackingNumber);
           if (s.showDateTime) lines.push('🕒 ' + dateStr + ' ' + timeStr);
@@ -712,7 +712,7 @@
       const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'2-digit', day:'2-digit' });
       const timeStr = now.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
       const lines = [];
-      if (s.operatorName) lines.push('👤 ' + s.operatorName);
+      if (s.operatorName) lines.push('👤 หน.ปณ. ' + s.operatorName);
       if (s.branchName) lines.push('🏣 ' + s.branchName);
       if (s.showTracking && trackingNumber) lines.push('📦 ' + trackingNumber);
       if (s.showDateTime) lines.push('🕒 ' + dateStr + ' ' + timeStr);
